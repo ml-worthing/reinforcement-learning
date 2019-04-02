@@ -5,7 +5,7 @@ import scala.util.Random
 
 /**
   * K-armed bandit problem, so named by analogy to a slot machine,
-  * or “one-armed bandit,” except that it has k levers instead of one.
+  * or "one-armed bandit" except that it has k levers instead of one.
   * Each action selection is like a play of one of the slot machine’s levers,
   * and the rewards are the payoffs for hitting the jackpot.
   * Through repeated action selections you are to maximize your winnings by
@@ -14,7 +14,7 @@ import scala.util.Random
   *
   * @param arms - mapping of an arm number to the reward distribution parameters (average, spread)
   */
-class Bandit(arms: Map[Int, (Int, Int)]) extends Environment[Unit, Int] {
+class KArmedBandit(arms: Map[Int, (Int, Int)]) extends Environment[Unit, Int] {
 
   val actions = arms.keySet
 

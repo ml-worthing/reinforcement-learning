@@ -8,3 +8,8 @@ This repository provides basic abstractions and tools to study reinforcement lea
 
 and set of testing tools to validate and compare results.
 
+Explored problems
+---
+
+- Stationary K-armed bandit and epsilon greedy algorithm 
+

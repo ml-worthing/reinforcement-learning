@@ -2,9 +2,9 @@ package com.github.mlworthing.rl.bandit
 
 import org.scalatest.FreeSpec
 
-class BanditTest extends FreeSpec {
+class KArmedBanditTest extends FreeSpec {
 
-  "find a solution for Bandit problem using e-greedy agent" in {
+  "find a solution for K-armed bandit problem using epsilon greedy agent" in {
 
     val arms = Map(
       1 -> (0, 10),
@@ -14,9 +14,9 @@ class BanditTest extends FreeSpec {
       9 -> (-1, 2)
     )
 
-    val bandit = new Bandit(arms)
+    val kArmedBandit = new KArmedBandit(arms)
     val eGreedyAgent = EGreedyAgent(epsilon = 0.1, rate = 1, stepsToLearn = 200)
-    val solution = eGreedyAgent.solve(bandit)
+    val solution = eGreedyAgent.solve(kArmedBandit)
 
     println(solution.head)
   }
