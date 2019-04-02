@@ -1,7 +1,7 @@
 package com.github.mlworthing.rl
 package bandit
 
-import scala.util.Random
+import utils.GaussianRandom
 
 /**
   * K-armed bandit problem, so named by analogy to a slot machine,
@@ -12,9 +12,9 @@ import scala.util.Random
   * concentrating your actions on the best levers.
   * @see <https://mitpress.mit.edu/books/reinforcement-learning-second-edition>
   *
-  * @param arms - mapping of an arm number to the reward distribution parameters (average, spread)
+  * @param arms - mapping of an arm number to the reward's gaussian distribution parameters (mean, range)
   */
-class KArmedBandit(arms: Map[Int, (Int, Int)]) extends Environment[Unit, Int] {
+class KArmedBandit(arms: Map[Int, (Double, Double)]) extends Environment[Unit, Int] {
 
   val actions = arms.keySet
 
@@ -23,14 +23,15 @@ class KArmedBandit(arms: Map[Int, (Int, Int)]) extends Environment[Unit, Int] {
     ((), reward(action.getOrElse(actions.head)), actions)
 
   /**
-    * Bandit reward is a random number generated for a given arm
-    * in the range (average-spread/2, average+spread/2)
+    * Bandit reward is a normal random number generated for a given arm
+    * with the parameters (average, deviation)
     **/
   private def reward(action: Int): Double =
     arms
       .get(action)
       .map {
-        case (average, spread) => (average - spread / 2) + Random.nextDouble() * spread
+        case (mean, range) =>
+          GaussianRandom.next(mean, range / 7d, mean - range / 2, mean + range / 2)
       }
       .getOrElse(throw new Exception(s"Invalid action $action"))
 
