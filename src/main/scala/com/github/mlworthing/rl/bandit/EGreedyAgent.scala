@@ -5,12 +5,7 @@ import com.github.mlworthing.rl.{Agent, Environment}
 import scala.collection.mutable
 import scala.util.Random
 
-case class EGreedyAgent(
-                         epsilon: Double = 0.01,
-                         rate: Double = 0.1,
-                         stepsToLearn: Int = 100
-                       ) extends Agent[Unit, Int] {
-
+case class EGreedyAgent(epsilon: Double = 0.01, rate: Double = 0.1, stepsToLearn: Int = 100) extends Agent[Unit, Int] {
 
   override def solve(environment: Environment[Unit, Int]): Seq[Int] = {
 
@@ -24,8 +19,7 @@ case class EGreedyAgent(
         if (explore) {
           val randomActionIndex = Random.nextInt(actions.length)
           actions(randomActionIndex)
-        }
-        else {
+        } else {
           q.maxBy(_._2)._1
         }
       }

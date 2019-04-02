@@ -16,7 +16,7 @@ trait Environment[State, Action] {
     * - list of the next possible actions (can be static or dynamic).
     * Should return current or some initial state if action is None
     * */
-  def send(action: Option[Action]):(State, Double, Seq[Action])
+  def send(action: Option[Action]): (State, Double, Seq[Action])
 
   /** Is given state terminal or not? */
   def isTerminal(state: State): Boolean

@@ -6,7 +6,6 @@ class BanditTest extends FreeSpec {
 
   "" in {
 
-
     val arms = Map(
       1 -> (0, 10),
       2 -> (1, 1),
