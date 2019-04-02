@@ -6,7 +6,6 @@ import org.scalatest.{FreeSpec, Matchers}
 class KArmedBanditTest extends FreeSpec with Matchers {
 
   "find a solution for K-armed bandit problem using epsilon greedy agent" in {
-
     val arms = Map(
       1 -> (0, 10),
       2 -> (1, 1),
@@ -16,8 +15,6 @@ class KArmedBanditTest extends FreeSpec with Matchers {
     )
 
     val kArmedBandit = new KArmedBandit(arms)
-    val eGreedyAgent = EGreedyAgent(epsilon = 0.1, rate = 1, stepsToLearn = 200)
-    val solution = eGreedyAgent.solve(kArmedBandit)
 
     val evaluator = AgentEvaluator(
       expected = Seq(7),
@@ -27,6 +24,7 @@ class KArmedBanditTest extends FreeSpec with Matchers {
 
     val stats = evaluator.evaluate(kArmedBandit, 100)
 
-    stats.maxBy(_._2)._2 should be > 99d
+    stats.print
+    stats.maxRate should be > 99d
   }
 }
