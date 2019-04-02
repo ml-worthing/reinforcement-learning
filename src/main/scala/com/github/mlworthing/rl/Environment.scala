@@ -13,10 +13,10 @@ trait Environment[State, Action] {
     * Agent sends an action (or none) and receives:
     * - state observed after action
     * - reward gained for this action
-    * - list of the next possible actions (can be static or dynamic).
-    * Should return current or some initial state if action is None
-    * */
-  def send(action: Option[Action]): (State, Double, Seq[Action])
+    * - set of the next possible actions (can be static or dynamic).
+    * Sending None action is a way to discover initial state and possible actions.
+    **/
+  def send(action: Option[Action]): (State, Double, Set[Action])
 
   /** Is given state terminal or not? */
   def isTerminal(state: State): Boolean

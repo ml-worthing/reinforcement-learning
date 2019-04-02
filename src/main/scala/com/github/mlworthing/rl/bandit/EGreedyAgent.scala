@@ -9,25 +9,26 @@ case class EGreedyAgent(epsilon: Double = 0.01, rate: Double = 0.1, stepsToLearn
 
   override def solve(environment: Environment[Unit, Int]): Seq[Int] = {
 
-    val (_, _, actions) = environment.send(None)
+    val actions = environment.send(None)._3.toSeq
 
     val q: mutable.Map[Int, Double] = mutable.Map(actions.map(x => (x, 0d)): _*)
 
-    (0 to stepsToLearn).foreach { step =>
+    (0 to stepsToLearn).foreach { _ =>
       val action = {
         val explore = Random.nextDouble() < epsilon
         if (explore) {
-          val randomActionIndex = Random.nextInt(actions.length)
+          val randomActionIndex = Random.nextInt(actions.size)
           actions(randomActionIndex)
         } else {
           q.maxBy(_._2)._1
         }
       }
-      val (_, reward, _) = environment.send(Some(action))
+      val reward = environment.send(Some(action))._2
       q(action) = q(action) + rate * (reward - q(action))
 
       println(q)
     }
+
     Seq(q.maxBy(_._2)._1)
   }
 }

@@ -4,7 +4,7 @@ import org.scalatest.FreeSpec
 
 class BanditTest extends FreeSpec {
 
-  "" in {
+  "find a solution for Bandit problem using e-greedy agent" in {
 
     val arms = Map(
       1 -> (0, 10),
@@ -15,9 +15,7 @@ class BanditTest extends FreeSpec {
     )
 
     val bandit = new Bandit(arms)
-
-    val eGreedyAgent = EGreedyAgent(epsilon = 0.1, rate = 1, stepsToLearn = 100)
-
+    val eGreedyAgent = EGreedyAgent(epsilon = 0.1, rate = 1, stepsToLearn = 200)
     val solution = eGreedyAgent.solve(bandit)
 
     println(solution.head)
