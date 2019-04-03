@@ -23,6 +23,9 @@ trait Environment[State, Action] {
 
   /** Environment description */
   def description: String
+
+  def discoverActions: Set[Action] = send(None)._3
+  def discoverInitialStateAndActions: (State, Set[Action]) = { val d = send(None); (d._1, d._3) }
 }
 
 /**
@@ -38,5 +41,8 @@ trait StationaryEnvironment[Action] extends Environment[Unit, Action] {
     ((), reward(action.getOrElse(actions.head)), actions)
 
   final override def isTerminal(state: Unit): Boolean = false
+
+  final override def discoverActions: Set[Action] = actions
+  final override def discoverInitialStateAndActions: (Unit, Set[Action]) = ((), actions)
 
 }
