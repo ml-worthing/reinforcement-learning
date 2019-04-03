@@ -24,3 +24,19 @@ trait Environment[State, Action] {
   /** Environment description */
   def description: String
 }
+
+/**
+  * Simplified stationary (stateless, non-terminal) environment having static set of actions.
+  */
+trait StationaryEnvironment[Action] extends Environment[Unit, Action] {
+
+  val actions: Set[Action]
+
+  def reward(action: Action): Double
+
+  final override def send(action: Option[Action]): (Unit, Double, Set[Action]) =
+    ((), reward(action.getOrElse(actions.head)), actions)
+
+  final override def isTerminal(state: Unit): Boolean = false
+
+}

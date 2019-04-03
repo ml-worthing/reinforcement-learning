@@ -14,19 +14,15 @@ import utils.GaussianRandom
   *
   * @param arms - mapping of an arm number to the reward's gaussian distribution parameters (mean, range)
   */
-class KArmedBandit(arms: Map[Int, (Double, Double)]) extends Environment[Unit, Int] {
+class KArmedBandit(arms: Map[Int, (Double, Double)]) extends StationaryEnvironment[Int] {
 
-  val actions = arms.keySet
-
-  /** Bandit returns always the same unit state and static set of actions */
-  override def send(action: Option[Int]): (Unit, Double, Set[Int]) =
-    ((), reward(action.getOrElse(actions.head)), actions)
+  override val actions: Set[Int] = arms.keySet
 
   /**
     * Bandit reward is a normal random number generated
     * for a given arm parameters (mean, range)
     **/
-  private def reward(action: Int): Double =
+  override def reward(action: Int): Double =
     arms
       .get(action)
       .map {
@@ -34,8 +30,6 @@ class KArmedBandit(arms: Map[Int, (Double, Double)]) extends Environment[Unit, I
           GaussianRandom.next(mean, range / 7d, mean - range / 2, mean + range / 2)
       }
       .getOrElse(throw new Exception(s"Invalid action $action"))
-
-  override def isTerminal(state: Unit): Boolean = false
 
   override def description: String =
     s"""The ${arms.size}-armed bandit environment.
