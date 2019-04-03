@@ -14,15 +14,15 @@ import utils.GaussianRandom
   *
   * @param arms - mapping of an arm number to the reward's gaussian distribution parameters (mean, range)
   */
-class KArmedBandit(arms: Map[Int, (Double, Double)]) extends StationaryEnvironment[Int] {
+class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends StationaryEnvironment[A] {
 
-  override val actions: Set[Int] = arms.keySet
+  override val actions: Set[A] = arms.keySet
 
   /**
     * Bandit reward is a normal random number generated
     * for a given arm parameters (mean, range)
     **/
-  override def reward(action: Int): Double =
+  override def reward(action: A): Double =
     arms
       .get(action)
       .map {

@@ -2,6 +2,7 @@ package com.github.mlworthing.rl.bandit
 
 import com.github.mlworthing.rl.utils.AgentEvaluator
 import org.scalatest.{FreeSpec, Matchers}
+import sun.management.resources.agent
 
 class KArmedBanditTest extends FreeSpec with Matchers {
 
@@ -19,7 +20,7 @@ class KArmedBanditTest extends FreeSpec with Matchers {
 
     val evaluator = AgentEvaluator(
       expected = Seq(7),
-      agent = EGreedyAgent(0.2, 1, _),
+      agent = EGreedyAgent[Int](0.2, 1, _),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000)
     )
 
