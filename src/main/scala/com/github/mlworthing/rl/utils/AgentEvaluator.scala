@@ -8,12 +8,12 @@ package utils
   * @param agent - agent creator
   * @param configurations - configurations to evaluate
   */
-case class AgentEvaluator[State, Action, Config](
+case class AgentEvaluator[State, Action, Config, E <: Environment[State, Action]](
   expected: Seq[Action],
-  agent: Config => Agent[State, Action],
+  agent: Config => Agent[State, Action, E],
   configurations: Iterable[Config]) {
 
-  def evaluate(environment: => Environment[State, Action], numberOfSamples: Int): EvaluationResults[Config] = {
+  def evaluate(environment: => E, numberOfSamples: Int): EvaluationResults[Config] = {
     val rates = configurations.map { config =>
       val successful = (0 until numberOfSamples)
         .count(_ => agent(config).solve(environment) == expected)
