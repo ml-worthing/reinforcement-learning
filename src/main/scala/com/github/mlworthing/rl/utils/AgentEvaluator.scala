@@ -20,6 +20,6 @@ case class AgentEvaluator[State, Action, Config](
       val successRate = (successful * 100d) / numberOfSamples
       (config, successRate)
     }
-    EvaluationResults(rates.toSeq, numberOfSamples)
+    EvaluationResults(environment.description, rates.toSeq, numberOfSamples)
   }
 }

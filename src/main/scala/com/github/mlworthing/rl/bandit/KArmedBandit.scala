@@ -36,4 +36,8 @@ class KArmedBandit(arms: Map[Int, (Double, Double)]) extends Environment[Unit, I
       .getOrElse(throw new Exception(s"Invalid action $action"))
 
   override def isTerminal(state: Unit): Boolean = false
+
+  override def description: String =
+    s"""The ${arms.size}-armed bandit environment.
+       |${arms.map { case (k, (m, r)) => f"arm #$k mean$m%6.1f  range$r%6.1f" }.mkString("\n")}""".stripMargin
 }

@@ -20,4 +20,7 @@ trait Environment[State, Action] {
 
   /** Is given state terminal or not? */
   def isTerminal(state: State): Boolean
+
+  /** Environment description */
+  def description: String
 }
