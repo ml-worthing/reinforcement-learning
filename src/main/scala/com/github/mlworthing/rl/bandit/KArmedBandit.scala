@@ -23,8 +23,8 @@ class KArmedBandit(arms: Map[Int, (Double, Double)]) extends Environment[Unit, I
     ((), reward(action.getOrElse(actions.head)), actions)
 
   /**
-    * Bandit reward is a normal random number generated for a given arm
-    * with the parameters (average, deviation)
+    * Bandit reward is a normal random number generated
+    * for a given arm parameters (mean, range)
     **/
   private def reward(action: Int): Double =
     arms
