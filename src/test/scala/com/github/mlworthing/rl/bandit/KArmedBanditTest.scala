@@ -1,4 +1,5 @@
-package com.github.mlworthing.rl.bandit
+package com.github.mlworthing.rl
+package bandit
 
 import com.github.mlworthing.rl.utils.AgentEvaluator
 import org.scalatest.{FreeSpec, Matchers}
@@ -19,14 +20,14 @@ class KArmedBanditTest extends FreeSpec with Matchers {
     val kArmedBandit = new KArmedBandit(arms)
 
     val evaluator = AgentEvaluator(
-      expected = Seq(7),
-      agent = EGreedyAgent[Int](0.2, 1, _),
+      expected = Winner(7),
+      agent = EGreedyAgent[Int](0.2, 0.9, _),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000)
     )
 
     val stats = evaluator.evaluate(kArmedBandit, 100)
 
     stats.print
-    stats.maxRate should be > 99.9d
+    stats.maxRate should be > 99.0d
   }
 }

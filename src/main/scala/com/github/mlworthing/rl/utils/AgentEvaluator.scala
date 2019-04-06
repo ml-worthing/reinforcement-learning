@@ -9,7 +9,7 @@ package utils
   * @param configurations - configurations to evaluate
   */
 case class AgentEvaluator[State, Action, Config, E <: Environment[State, Action]](
-  expected: Seq[Action],
+  expected: Policy[State, Action],
   agent: Config => Agent[State, Action, E],
   configurations: Iterable[Config]) {
 

@@ -1,48 +1,48 @@
 package com.github.mlworthing.rl
 
 /**
-  * Reinforcement learning environment API, parametrised by
-  * the State and Action types. The type of reward is fixed to be Double.
+  * Reinforcement learning Environment API.
+  * Parametrised by the State and Action type.
+  * The type of reward is fixed to be Double.
   * The time flow and other features are hidden from the Agent, but should
   * be taken into account when calculating state and reward.
   */
 trait Environment[State, Action] {
 
+  case class Observation(state: State, reward: Double, actions: Set[Action], isTerminal: Boolean)
+
+  /** Some initial state and corresponding actions */
+  def initial: (State, Set[Action])
+
   /**
     * The primary way for an Agent to interact with an Environment.
-    * Agent sends an action (or none) and receives:
-    * - state observed after action
+    * Agent sends an action (or none) and receives an observation:
+    * - state after an action
     * - reward gained for this action
-    * - set of the next possible actions (can be static or dynamic).
-    * Sending None action is a way to discover initial state and possible actions.
-    **/
-  def send(action: Option[Action]): (State, Double, Set[Action])
+    * - set of the next possible actions (can be static or dynamic)
+    * - is the state terminal or not?
+    */
+  def send(action: Action): Observation
 
-  /** Is given state terminal or not? */
-  def isTerminal(state: State): Boolean
-
-  /** Environment description */
+  /** Human-readable environment description */
   def description: String
-
-  def discoverActions: Set[Action] = send(None)._3
-  def discoverInitialStateAndActions: (State, Set[Action]) = { val d = send(None); (d._1, d._3) }
 }
 
+//-------------------------
+// COMMON ENVIRONMENT TYPES
+//-------------------------
+
 /**
-  * Simplified stationary (stateless, non-terminal) environment having static set of actions.
+  * Infinite stationary (stateless, non-terminal)
+  * environment with static set of actions.
   */
 trait StationaryEnvironment[Action] extends Environment[Unit, Action] {
 
   val actions: Set[Action]
-
   def reward(action: Action): Double
 
-  final override def send(action: Option[Action]): (Unit, Double, Set[Action]) =
-    ((), reward(action.getOrElse(actions.head)), actions)
-
-  final override def isTerminal(state: Unit): Boolean = false
-
-  final override def discoverActions: Set[Action] = actions
-  final override def discoverInitialStateAndActions: (Unit, Set[Action]) = ((), actions)
+  final override def initial: (Unit, Set[Action]) = ((), actions)
+  final override def send(action: Action): Observation =
+    Observation((), reward(action), actions, isTerminal = false)
 
 }
