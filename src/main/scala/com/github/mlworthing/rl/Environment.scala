@@ -16,7 +16,7 @@ trait Environment[State, Action] {
 
   /**
     * The primary way for an Agent to interact with an Environment.
-    * Agent sends an action (or none) and receives an observation:
+    * Agent sends an action and receives an observation:
     * - state after an action
     * - reward gained for this action
     * - set of the next possible actions (can be static or dynamic)

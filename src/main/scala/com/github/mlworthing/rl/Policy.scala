@@ -11,7 +11,7 @@ import scala.util.Random
 trait Policy[State, Action] {
 
   /** Run this policy in the given environment and collect rewards */
-  def run(environment: Environment[State, Action]): Double
+  def runWith(environment: Environment[State, Action]): Double
 }
 
 //----------------
@@ -21,26 +21,26 @@ trait Policy[State, Action] {
 /** The best single action to take */
 case class Winner[A](action: A) extends Policy[Unit, A] {
 
-  override def run(environment: Environment[Unit, A]): Double =
+  override def runWith(environment: Environment[Unit, A]): Double =
     environment.send(action).reward
 }
 
 /** The best plan, sequence of actions to take */
 case class Trajectory[S, A](actions: Seq[A]) extends Policy[S, A] {
 
-  override def run(environment: Environment[S, A]): Double =
+  override def runWith(environment: Environment[S, A]): Double =
     actions.foldLeft(0d)((s, a) => s + environment.send(a).reward)
 }
 
 /** The best action to take given the current state */
 case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
 
-  override def run(environment: Environment[S, A]): Double = {
+  override def runWith(environment: Environment[S, A]): Double = {
     @tailrec
-    def evaluate(s: S, rewards: Double): Double = {
-      val o = environment.send(policy(s))
-      val r = rewards + o.reward
-      if (o.isTerminal) r else evaluate(o.state, r)
+    def evaluate(s: S, rewardSum: Double): Double = {
+      val observation = environment.send(policy(s))
+      val newRewardSum = rewardSum + observation.reward
+      if (observation.isTerminal) newRewardSum else evaluate(observation.state, newRewardSum)
     }
     evaluate(environment.initial._1, 0d)
   }
@@ -64,15 +64,15 @@ case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[
     })
   }
 
-  override def run(environment: Environment[S, A]): Double = {
+  override def runWith(environment: Environment[S, A]): Double = {
     @tailrec
-    def evaluate(s: S, rewards: Double): Double = {
+    def evaluate(s: S, rewardSum: Double): Double = {
       val random = Random.nextDouble()
       val actionSet = mapStateToSortedListOfActionsWithUpperBounds(s)
       val action = actionSet.find { case (_, limit) => random <= limit }.getOrElse(actionSet.head)._1
       val observation = environment.send(action)
-      val reward = rewards + observation.reward
-      if (observation.isTerminal) reward else evaluate(observation.state, reward)
+      val newRewardSum = rewardSum + observation.reward
+      if (observation.isTerminal) newRewardSum else evaluate(observation.state, newRewardSum)
     }
     evaluate(environment.initial._1, 0d)
   }
