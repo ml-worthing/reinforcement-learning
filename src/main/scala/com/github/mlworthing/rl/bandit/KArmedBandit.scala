@@ -14,7 +14,7 @@ import utils.GaussianRandom
   *
   * @param arms - mapping of an arm number to the reward's gaussian distribution parameters (mean, range)
   */
-class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends StationaryEnvironment[A] {
+class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends StatelessEnvironment[A] {
 
   override val actions: Set[A] = arms.keySet
 

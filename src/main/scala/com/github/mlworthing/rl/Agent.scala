@@ -10,4 +10,6 @@ trait Agent[State, Action, E <: Environment[State, Action]] {
   /** Algorithm finding the best policy given the constraints */
   def solve(environment: E): Policy[State, Action]
 
+  /** Override to provide better human-readable description */
+  def description: String = toString
 }

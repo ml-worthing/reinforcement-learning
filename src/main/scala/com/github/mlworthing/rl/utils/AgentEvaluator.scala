@@ -11,7 +11,8 @@ package utils
 case class AgentEvaluator[State, Action, Config, E <: Environment[State, Action]](
   expected: Policy[State, Action],
   agent: Config => Agent[State, Action, E],
-  configurations: Iterable[Config]) {
+  configurations: Iterable[Config],
+  description: String) {
 
   def evaluate(environment: => E, numberOfSamples: Int): EvaluationResults[Config] = {
     val rates = configurations.map { config =>
@@ -20,6 +21,6 @@ case class AgentEvaluator[State, Action, Config, E <: Environment[State, Action]
       val successRate = (successful * 100d) / numberOfSamples
       (config, successRate)
     }
-    EvaluationResults(environment.description, rates.toSeq, numberOfSamples)
+    EvaluationResults(description + "\n" + environment.description, rates.toSeq, numberOfSamples)
   }
 }

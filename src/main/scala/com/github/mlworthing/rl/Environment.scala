@@ -33,10 +33,10 @@ trait Environment[State, Action] {
 //-------------------------
 
 /**
-  * Infinite stationary (stateless, non-terminal)
+  * Infinite stateless, non-terminal
   * environment with static set of actions.
   */
-trait StationaryEnvironment[Action] extends Environment[Unit, Action] {
+trait StatelessEnvironment[Action] extends Environment[Unit, Action] {
 
   val actions: Set[Action]
   def reward(action: Action): Double
