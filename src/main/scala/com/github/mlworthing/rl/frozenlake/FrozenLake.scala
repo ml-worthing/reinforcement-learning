@@ -2,6 +2,8 @@ package com.github.mlworthing.rl.frozenlake
 
 import com.github.mlworthing.rl.Environment
 
+import scala.util.Random
+
 /**
   * The Frozen Lake environment as described in the book
   * <https://www.manning.com/books/grokking-deep-reinforcement-learning>
@@ -14,13 +16,9 @@ trait FrozenLake[State, Action] extends Environment[State, Action] {
 
   type Probability = Double
 
-  val actions = Seq("N", "S", "W", "E")
+  val actions = Set("N", "S", "W", "E")
 
   val board: Map[State, Map[Action, Seq[(State, Double, Probability)]]]
-
-  override def initial: (State, Set[Action]) = ???
-
-  override def send(action: Action): Observation = ???
 
   override def description: String = ""
 
@@ -126,4 +124,16 @@ class FrozenLakeImpl extends FrozenLake[Int, String] {
       "S" -> Seq((15, 0.33, 1), (14, 0.33, 0), (15, 0.33, 1))
     )
   )
+
+  var current: Int = initial._1
+
+  override def initial: (Int, Set[String]) = (0, actions)
+
+  override def send(action: String): Observation = {
+    val p = Random.nextDouble()
+    val aa = board(current)(action)
+    val (newState, reward, _) = if (p < 0.33) aa(0) else if (p < 0.66) aa(1) else aa(2)
+    Observation(newState, reward, actions, newState == 15)
+  }
+
 }
