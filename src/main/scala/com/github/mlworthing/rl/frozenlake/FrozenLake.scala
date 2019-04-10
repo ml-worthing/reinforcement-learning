@@ -132,8 +132,8 @@ class FrozenLakeImpl extends FrozenLake[Int, String] {
   override def send(action: String): Observation = {
     val p = Random.nextDouble()
     val aa = board(current)(action)
-    val (newState, reward, _) = if (p < 0.33) aa(0) else if (p < 0.66) aa(1) else aa(2)
-    Observation(newState, reward, actions, newState == 15)
+    val (newState, _, reward) = if (p < 0.33) aa(0) else if (p < 0.66) aa(1) else aa(2)
+    Observation(newState, reward, actions, Set(5, 7, 11, 15).contains(newState))
   }
 
 }
