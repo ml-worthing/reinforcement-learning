@@ -15,11 +15,13 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
   type Reward = Double
   type Probability = Double
+
+  /** Board represents map of states to map of actions to the sequence of possible move results */
   type MoveResult = (State, Probability, Reward)
   type Board = Map[State, Map[Action, Seq[MoveResult]]]
-  type Move = (Int, Int)
 
   /** Main action move, its probability and related unlucky moves */
+  type Move = (Int, Int)
   type ActionMoves = (Move, Probability, Map[Move, Probability])
 
   /** Textual layout definition, space and newline separated */
@@ -61,6 +63,7 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
       initialStates.contains(currentState) || terminalStates.contains(currentState))
   }
 
+  /** Parses square tiles board */
   private def parseLayout: (Board, Seq[State], Seq[State]) = {
 
     val tiles: Array[Array[String]] = layout.lines
