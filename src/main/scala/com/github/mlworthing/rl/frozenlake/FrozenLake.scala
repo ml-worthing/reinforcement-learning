@@ -1,8 +1,6 @@
 package com.github.mlworthing.rl.frozenlake
 
-import com.github.mlworthing.rl.Environment
-
-import scala.util.Random
+import com.github.mlworthing.rl.utils.BoardEnvironment
 
 /**
   * The Frozen Lake environment as described in the book
@@ -10,130 +8,38 @@ import scala.util.Random
   *
   * The 4x4 board consists of 16 tiles having 4 ice holes rewarding -1
   * and one terminal state rewarding 1. The probability of moving on ice in the selected
-  * direction is 1/3.
+  * direction should be less than 1.
   */
-trait FrozenLake[State, Action] extends Environment[State, Action] {
+case class FrozenLake(gamma: Double) extends BoardEnvironment[Int, String] {
 
-  type Probability = Double
+  override lazy val layout: String =
+    s"""
+       |S 0 0 0
+       |0 F 0 F
+       |0 0 0 F
+       |F 0 0 G
+     """.stripMargin
 
-  val actions = Set("N", "S", "W", "E")
+  lazy val Up: Move = (-1, 0)
+  lazy val Right: Move = (0, 1)
+  lazy val Down: Move = (1, 0)
+  lazy val Left: Move = (0, -1)
 
-  val board: Map[State, Map[Action, Seq[(State, Double, Probability)]]]
-
-  override def description: String = ""
-
-}
-
-class FrozenLakeImpl extends FrozenLake[Int, String] {
-
-  val board = Map(
-    0 -> Map(
-      "W" -> Seq((0, 0.33, 0), (0, 0.33, 0), (4, 0.33, 0)),
-      "E" -> Seq((1, 0.33, 0), (0, 0.33, 0), (4, 0.33, 0)),
-      "N" -> Seq((0, 0.33, 0), (0, 0.33, 0), (1, 0.33, 0)),
-      "S" -> Seq((1, 0.33, 0), (0, 0.33, 0), (4, 0.33, 0))
-    ),
-    1 -> Map(
-      "W" -> Seq((0, 0.33, 0), (1, 0.33, 0), (5, 0.33, -1)),
-      "E" -> Seq((2, 0.33, 0), (1, 0.33, 0), (5, 0.33, -1)),
-      "N" -> Seq((1, 0.33, 0), (0, 0.33, 0), (2, 0.33, 0)),
-      "S" -> Seq((5, 0.33, -1), (0, 0.33, 0), (2, 0.33, 0))
-    ),
-    2 -> Map(
-      "W" -> Seq((1, 0.33, 0), (2, 0.33, 0), (6, 0.33, 0)),
-      "E" -> Seq((3, 0.33, 0), (2, 0.33, 0), (6, 0.33, 0)),
-      "N" -> Seq((2, 0.33, 0), (1, 0.33, 0), (3, 0.33, 0)),
-      "S" -> Seq((6, 0.33, 0), (1, 0.33, 0), (3, 0.33, 0))
-    ),
-    3 -> Map(
-      "W" -> Seq((2, 0.33, 0), (3, 0.33, 0), (7, 0.33, -1)),
-      "E" -> Seq((3, 0.33, 0), (3, 0.33, 0), (7, 0.33, -1)),
-      "N" -> Seq((3, 0.33, 0), (2, 0.33, 0), (3, 0.33, 0)),
-      "S" -> Seq((7, 0.33, -1), (2, 0.33, 0), (3, 0.33, 0))
-    ),
-    4 -> Map(
-      "W" -> Seq((4, 0.33, 0), (0, 0.33, 0), (8, 0.33, 0)),
-      "E" -> Seq((5, 0.33, -1), (0, 0.33, 0), (8, 0.33, 0)),
-      "N" -> Seq((0, 0.33, 0), (4, 0.33, 0), (5, 0.33, -1)),
-      "S" -> Seq((8, 0.33, 0), (4, 0.33, 0), (5, 0.33, -1))
-    ),
-    5 -> Map(
-      "W" -> Seq((4, 0.33, 0), (1, 0.33, 0), (9, 0.33, 0)),
-      "E" -> Seq((6, 0.33, 0), (1, 0.33, 0), (9, 0.33, 0)),
-      "N" -> Seq((1, 0.33, 0), (4, 0.33, 0), (6, 0.33, 0)),
-      "S" -> Seq((9, 0.33, 0), (4, 0.33, 0), (6, 0.33, 0))
-    ),
-    6 -> Map(
-      "W" -> Seq((5, 0.33, -1), (2, 0.33, 0), (10, 0.33, 0)),
-      "E" -> Seq((7, 0.33, -1), (2, 0.33, 0), (10, 0.33, 0)),
-      "N" -> Seq((2, 0.33, 0), (5, 0.33, -1), (7, 0.33, -1)),
-      "S" -> Seq((10, 0.33, 0), (5, 0.33, -1), (7, 0.33, -1))
-    ),
-    7 -> Map(
-      "W" -> Seq((6, 0.33, 0), (3, 0.33, 0), (11, 0.33, -1)),
-      "E" -> Seq((7, 0.33, -1), (3, 0.33, 0), (11, 0.33, -1)),
-      "N" -> Seq((3, 0.33, 0), (6, 0.33, 0), (7, 0.33, -1)),
-      "S" -> Seq((11, 0.33, -1), (6, 0.33, 0), (7, 0.33, -1))
-    ),
-    8 -> Map(
-      "W" -> Seq((8, 0.33, 0), (4, 0.33, 0), (12, 0.33, 0)),
-      "E" -> Seq((9, 0.33, 0), (4, 0.33, 0), (12, 0.33, 0)),
-      "N" -> Seq((4, 0.33, 0), (8, 0.33, 0), (9, 0.33, 0)),
-      "S" -> Seq((12, 0.33, -1), (8, 0.33, 0), (9, 0.33, 0))
-    ),
-    9 -> Map(
-      "W" -> Seq((8, 0.33, 0), (5, 0.33, -1), (13, 0.33, 0)),
-      "E" -> Seq((10, 0.33, 0), (5, 0.33, -1), (13, 0.33, 0)),
-      "N" -> Seq((5, 0.33, -1), (8, 0.33, 0), (10, 0.33, 0)),
-      "S" -> Seq((13, 0.33, 0), (8, 0.33, 0), (10, 0.33, 0))
-    ),
-    10 -> Map(
-      "W" -> Seq((9, 0.33, 0), (6, 0.33, 0), (14, 0.33, 0)),
-      "E" -> Seq((11, 0.33, -1), (6, 0.33, 0), (15, 0.33, 1)),
-      "N" -> Seq((6, 0.33, 0), (9, 0.33, 0), (11, 0.33, -1)),
-      "S" -> Seq((14, 0.33, 0), (9, 0.33, 0), (11, 0.33, -1))
-    ),
-    11 -> Map(
-      "W" -> Seq((10, 0.33, 0), (7, 0.33, -1), (15, 0.33, 1)),
-      "E" -> Seq((11, 0.33, -1), (7, 0.33, -1), (15, 0.33, 1)),
-      "N" -> Seq((7, 0.33, -1), (10, 0.33, 0), (11, 0.33, -1)),
-      "S" -> Seq((15, 0.33, 1), (10, 0.33, 0), (11, 0.33, -1))
-    ),
-    12 -> Map(
-      "W" -> Seq((12, 0.33, -1), (8, 0.33, 0), (12, 0.33, 0)),
-      "E" -> Seq((13, 0.33, 0), (8, 0.33, 0), (12, 0.33, 0)),
-      "N" -> Seq((8, 0.33, 0), (12, 0.33, 0), (13, 0.33, 0)),
-      "S" -> Seq((12, 0.33, -1), (12, 0.33, 0), (13, 0.33, 0))
-    ),
-    13 -> Map(
-      "W" -> Seq((12, 0.33, -1), (9, 0.33, 0), (13, 0.33, 0)),
-      "E" -> Seq((14, 0.33, 0), (9, 0.33, 0), (13, 0.33, 0)),
-      "N" -> Seq((9, 0.33, 0), (12, 0.33, 0), (14, 0.33, 0)),
-      "S" -> Seq((13, 0.33, 0), (12, 0.33, 0), (14, 0.33, 0))
-    ),
-    14 -> Map(
-      "W" -> Seq((13, 0.33, 0), (10, 0.33, 0), (14, 0.33, 0)),
-      "E" -> Seq((15, 0.33, 1), (10, 0.33, 0), (14, 0.33, 0)),
-      "N" -> Seq((10, 0.33, 0), (13, 0.33, 0), (15, 0.33, 1)),
-      "S" -> Seq((14, 0.33, 0), (13, 0.33, 0), (15, 0.33, 1))
-    ),
-    15 -> Map(
-      "W" -> Seq((14, 0.33, 0), (11, 0.33, -1), (15, 0.33, 1)),
-      "E" -> Seq((15, 0.33, 1), (11, 0.33, -1), (15, 0.33, 1)),
-      "N" -> Seq((11, 0.33, -1), (14, 0.33, 0), (15, 0.33, 1)),
-      "S" -> Seq((15, 0.33, 1), (14, 0.33, 0), (15, 0.33, 1))
-    )
+  override lazy val actionMoves: Map[String, ActionMoves] = Map(
+    "N" -> (Up, 0.34, Map(Right   -> 0.33, Left -> 0.33)),
+    "E" -> (Right, 0.34, Map(Up   -> 0.33, Down -> 0.33)),
+    "S" -> (Down, 0.34, Map(Right -> 0.33, Left -> 0.33)),
+    "W" -> (Left, 0.34, Map(Up    -> 0.33, Down -> 0.33))
   )
 
-  var current: Int = initial._1
+  override def stateAt(row: Int, col: Int): Int = row * 4 + col
 
-  override def initial: (Int, Set[String]) = (0, actions)
-
-  override def send(action: String): Observation = {
-    val p = Random.nextDouble()
-    val aa = board(current)(action)
-    val (newState, _, reward) = if (p < 0.33) aa(0) else if (p < 0.66) aa(1) else aa(2)
-    Observation(newState, reward, actions, Set(5, 7, 11, 15).contains(newState))
+  override def rewardFor(tile: String): Reward = tile match {
+    case "F" => -1
+    case "G" => 1
+    case _   => 0
   }
-
+  override def isAccessible(tile: String): Boolean = tile != "X"
+  override def isStart(tile: String): Boolean = tile == "S"
+  override def isTerminal(tile: String): Boolean = tile == "F" || tile == "G"
 }

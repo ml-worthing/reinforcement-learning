@@ -8,7 +8,7 @@ class FrozenLakeTest extends FreeSpec with Matchers {
 
   "find a solution for K-armed bandit problem using epsilon greedy stationary agent" in {
 
-    val frozenLake = new FrozenLakeImpl
+    val frozenLake = FrozenLake(gamma = 1.0)
     val agent = new AgentMDP[Int, String]
     val policy = agent.solve(frozenLake)
     val reward = policy.runWith(frozenLake)

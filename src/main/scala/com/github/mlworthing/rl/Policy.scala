@@ -60,6 +60,7 @@ case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[
             case Nil       => pair :: list
             case head :: _ => (pair._1, pair._2 + head._2) :: list
         })
+        .reverse
       list
     })
   }

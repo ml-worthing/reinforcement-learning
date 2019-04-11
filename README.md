@@ -5,11 +5,13 @@ This repository provides basic abstractions and tools to study reinforcement lea
 
 - Environment
 - Agent
+- Policy
 
 and set of testing tools to validate and compare results.
 
 Explored problems
 ---
 
-- Stationary K-armed bandit and epsilon greedy algorithm 
+- K-armed bandit: non-deterministic, stationary and non-stationery problems solved using epsilon greedy agent 
+- Frozen Lake: non-deterministic, stationary board-like problem
 
