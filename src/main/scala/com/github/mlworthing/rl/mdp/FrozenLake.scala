@@ -1,6 +1,7 @@
-package com.github.mlworthing.rl.frozenlake
+package com.github.mlworthing.rl
+package mdp
 
-import com.github.mlworthing.rl.utils.BoardEnvironment
+import utils.{BoardEnvironment, S0FGXFormat, UpRightDownLeft}
 
 /**
   * The Frozen Lake environment as described in the book
@@ -10,7 +11,7 @@ import com.github.mlworthing.rl.utils.BoardEnvironment
   * and one terminal state rewarding 1. The probability of moving on ice in the selected
   * direction should be less than 1.
   */
-case class FrozenLake(gamma: Double) extends BoardEnvironment[Int, String] {
+case class FrozenLake(gamma: Double = 0.9) extends BoardEnvironment[Int, String] with UpRightDownLeft with S0FGXFormat {
 
   override lazy val layout: String =
     s"""
@@ -20,11 +21,6 @@ case class FrozenLake(gamma: Double) extends BoardEnvironment[Int, String] {
        |F 0 0 G
      """.stripMargin
 
-  lazy val Up: Move = (-1, 0)
-  lazy val Right: Move = (0, 1)
-  lazy val Down: Move = (1, 0)
-  lazy val Left: Move = (0, -1)
-
   override lazy val actionMoves: Map[String, ActionMoves] = Map(
     "N" -> (Up, 0.34, Map(Right   -> 0.33, Left -> 0.33)),
     "E" -> (Right, 0.34, Map(Up   -> 0.33, Down -> 0.33)),
@@ -33,13 +29,4 @@ case class FrozenLake(gamma: Double) extends BoardEnvironment[Int, String] {
   )
 
   override def stateAt(row: Int, col: Int): Int = row * 4 + col
-
-  override def rewardFor(tile: String): Reward = tile match {
-    case "F" => -1
-    case "G" => 1
-    case _   => 0
-  }
-  override def isAccessible(tile: String): Boolean = tile != "X"
-  override def isStart(tile: String): Boolean = tile == "S"
-  override def isTerminal(tile: String): Boolean = tile == "F" || tile == "G"
 }

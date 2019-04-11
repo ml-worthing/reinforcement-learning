@@ -10,14 +10,22 @@ import scala.util.Random
   */
 trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
+  /** Reward discount factor. Makes reward value decline with the passing search time. */
+  val gamma: Double
+
   type Reward = Double
   type Probability = Double
   type MoveResult = (State, Probability, Reward)
   type Board = Map[State, Map[Action, Seq[MoveResult]]]
   type Move = (Int, Int)
+
+  /** Main action move, its probability and related unlucky moves */
   type ActionMoves = (Move, Probability, Map[Move, Probability])
 
+  /** Textual layout definition, space and newline separated */
   def layout: String
+
+  /** Possible moves on the board and their respected results */
   def actionMoves: Map[Action, ActionMoves]
 
   def stateAt(row: Int, col: Int): State
@@ -26,14 +34,13 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   def isStart(tile: String): Boolean
   def isTerminal(tile: String): Boolean
 
-  val gamma: Double
-
   val actions: Set[Action] = actionMoves.keySet
   val (board, initialStates, terminalStates) = parseLayout
 
   override val initial: (State, Set[Action]) = (initialStates(Random.nextInt(initialStates.size)), actions)
 
   @volatile private var currentState: State = initial._1
+  @volatile private var discount: Double = 0d
 
   override def send(action: Action): Observation = {
     val moveResults: Seq[MoveResult] = board(currentState)(action)
@@ -45,10 +52,11 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
       .getOrElse((moveResults.head._1, moveResults.head._3))
 
     currentState = newState
+    discount = if (gamma == 1d) 1d else if (discount == 0d) 1d else discount * gamma
 
     Observation(
       newState,
-      instantReward,
+      discount * instantReward,
       actions,
       initialStates.contains(currentState) || terminalStates.contains(currentState))
   }
@@ -105,4 +113,25 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
   override def description: String = layout
 
+}
+
+trait UpRightDownLeft {
+
+  lazy val Up = (-1, 0)
+  lazy val Right = (0, 1)
+  lazy val Down = (1, 0)
+  lazy val Left = (0, -1)
+}
+
+trait S0FGXFormat {
+
+  def rewardFor(tile: String): Double = tile match {
+    case "F" => -1
+    case "G" => 1
+    case _   => 0
+  }
+
+  def isAccessible(tile: String): Boolean = tile != "X"
+  def isStart(tile: String): Boolean = tile == "S"
+  def isTerminal(tile: String): Boolean = tile == "F" || tile == "G"
 }

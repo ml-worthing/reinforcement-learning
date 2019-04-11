@@ -1,5 +1,5 @@
 package com.github.mlworthing.rl
-package frozenlake
+package mdp
 
 class AgentMDP[State, Action] extends Agent[State, Action, Environment[State, Action]] {
 

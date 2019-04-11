@@ -1,5 +1,5 @@
 package com.github.mlworthing.rl
-package frozenlake
+package mdp
 
 import org.scalatest.{FreeSpec, Matchers}
 import sun.management.resources.agent

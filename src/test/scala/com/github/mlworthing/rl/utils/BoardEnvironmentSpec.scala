@@ -1,17 +1,25 @@
 package com.github.mlworthing.rl
 package utils
 
-import frozenlake.FrozenLake
+import mdp.{FrozenLake, SuperMario}
 import org.scalatest.{Matchers, WordSpec}
 
 class BoardEnvironmentSpec extends WordSpec with Matchers {
 
   "BoardEnvironment" should {
-    "parse square-tiles board" in {
-      val frozenLake = FrozenLake(1.0)
+
+    "parse FrozenLake" in {
+      val frozenLake = FrozenLake()
       frozenLake.initialStates should contain.only(0)
       frozenLake.terminalStates should contain.allOf(5, 7, 11, 12, 15)
       println(frozenLake.board)
+    }
+
+    "parse SuperMario" in {
+      val superMario = SuperMario()
+      superMario.initialStates should contain.only(8)
+      superMario.terminalStates should contain.allOf(3, 7)
+      println(superMario.board)
     }
   }
 
