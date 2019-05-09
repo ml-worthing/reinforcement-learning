@@ -26,9 +26,6 @@ import scala.util.Random
   */
 trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
-  /** Reward discount factor. Makes reward value decline with the passing search time. */
-  val gamma: Double
-
   type Reward = Double
   type Probability = Double
 
@@ -43,10 +40,18 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   /** Textual layout definition, space and newline separated */
   def layout: String
 
+  lazy val tiles: Array[Array[String]] = layout.lines
+    .map(_.trim)
+    .filterNot(_.isEmpty)
+    .toArray
+    .map(_.split("\\s+"))
+
   /** Possible moves on the board and their respected results */
   def actionMoves: Map[Action, ActionMoves]
 
   def stateAt(row: Int, col: Int): State
+  def positionOf(state: State): (Int, Int)
+
   def rewardFor(tile: String): Reward
   def isAccessible(tile: String): Boolean
   def isStart(tile: String): Boolean
@@ -58,7 +63,6 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   override val initial: (State, Set[Action]) = (initialStates(Random.nextInt(initialStates.size)), actions)
 
   @volatile private var currentState: State = initial._1
-  @volatile private var discount: Double = 0d
 
   override def send(action: Action): Observation = {
     val moveResults: Seq[MoveResult] = board(currentState)(action)
@@ -70,23 +74,16 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
       .getOrElse((moveResults.head._1, moveResults.head._3))
 
     currentState = newState
-    discount = if (gamma == 1d) 1d else if (discount == 0d) 1d else discount * gamma
 
     Observation(
       newState,
-      discount * instantReward,
+      instantReward,
       actions,
       initialStates.contains(currentState) || terminalStates.contains(currentState))
   }
 
   /** Parses square tiles board */
   private def parseLayout: (Board, Seq[State], Seq[State]) = {
-
-    val tiles: Array[Array[String]] = layout.lines
-      .map(_.trim)
-      .filterNot(_.isEmpty)
-      .toArray
-      .map(_.split("\\s+"))
 
     val tileAt: Map[(Int, Int), String] =
       (for ((row, r) <- tiles.zipWithIndex; (tile, c) <- row.zipWithIndex)
@@ -117,12 +114,6 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
                 case (m, p) => computeMoveResult(position, m, p)
               }.toList)
                 .collect { case Some(m) => m }
-                .foldLeft(List.empty[MoveResult])((list, moveResult) =>
-                  list match {
-                    case Nil       => moveResult :: list
-                    case head :: _ => (moveResult._1, moveResult._2 + head._2, moveResult._3) :: list
-                })
-                .reverse
           }
         }
     }
@@ -131,6 +122,15 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   }
 
   override def description: String = layout
+
+  def show[V](values: State => Option[V], format: (State, V) => String): String =
+    (for ((row, r) <- tiles.zipWithIndex)
+      yield
+        (for ((tile, c) <- row.zipWithIndex)
+          yield values(stateAt(r, c)).map(v => format(stateAt(r, c), v)).getOrElse(tile))
+          .map(t => f"$t%10s")
+          .mkString(" | "))
+      .mkString("\r\n")
 
 }
 

@@ -28,14 +28,12 @@ class BoardEnvironmentSpec extends WordSpec with Matchers {
       val frozenLake = FrozenLake()
       frozenLake.initialStates should contain.only(0)
       frozenLake.terminalStates should contain.allOf(5, 7, 11, 12, 15)
-      println(frozenLake.board)
     }
 
     "parse SuperMario" in {
       val superMario = SuperMario()
       superMario.initialStates should contain.only(8)
       superMario.terminalStates should contain.allOf(3, 7)
-      println(superMario.board)
     }
   }
 

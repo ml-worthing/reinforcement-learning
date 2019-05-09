@@ -25,10 +25,9 @@ class FrozenLakeTest extends FreeSpec with Matchers {
   "evaluate a random policy in a Frozen Lake" in {
 
     val frozenLake = FrozenLake(gamma = 1.0)
-    val agent = new AgentSimpleMDP[Int, String](theta = 0.1)
+    val agent = new AgentSimpleMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
     val policy = agent.solve(frozenLake)
-    val reward = policy.runWith(frozenLake)
-
-    //reward shouldBe 1
+    val reward = policy.runWith(frozenLake, maxIterations = 100)
+    println(s"Evaluated reward: $reward")
   }
 }

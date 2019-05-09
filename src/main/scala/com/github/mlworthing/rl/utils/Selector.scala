@@ -16,8 +16,6 @@
 
 package com.github.mlworthing.rl.utils
 
-import scala.util.Random
-
 object Selector {
 
   /**
@@ -26,28 +24,27 @@ object Selector {
     * @param chances A List containing chances
     * @return an index of 'chances' list which was selected
     */
-  def select(random: Random)(chances: List[Int]): Int = {
+  def select[N: Numeric](random: N => N)(chances: Seq[N]): Int = {
     require(chances.nonEmpty, "chances should not be empty")
-    val maxLevel = chances.sum
-    val level = random.nextInt(maxLevel)
+    val maxLevel: N = chances.sum
+    val level = random(maxLevel)
     Selector.selectByLevel(chances, level)
   }
 
   /**
-    * Private Selector's method.
     * Selects index by chance. It's slow but works. Not safe.
     */
-  def selectByLevel(chances: List[Int], level: Int): Int = {
+  def selectByLevel[N: Numeric](chances: Seq[N], level: N): Int = {
 
-    val accumulated = chances
-      .scanLeft(0)(_ + _)
+    val numeric = implicitly[Numeric[N]]
+
+    chances
+      .scanLeft(numeric.zero)(numeric.plus)
       .tail
-
-    accumulated //a scan adds extra element in front
       .zipWithIndex
-      .find(t => level < t._1) //the most tricky part
-      .get._2
+      .find(t => numeric.lt(level, t._1)) //the most tricky part
+      .map(_._2)
+      .getOrElse(chances.size - 1)
   }
 
 }
-

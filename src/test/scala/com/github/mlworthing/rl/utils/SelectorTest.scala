@@ -20,7 +20,6 @@ import org.scalatest.{AppendedClues, Matchers, WordSpec}
 
 import scala.util.Random
 
-
 class SelectorTest extends WordSpec with Matchers with AppendedClues {
 
   "Selector" should {
@@ -40,9 +39,9 @@ class SelectorTest extends WordSpec with Matchers with AppendedClues {
     "select by chances - sanity check" in {
       val chances = List(10, 20, 30)
       val random = new Random(123)
-      val select: List[Int] => Int = Selector.select(random)
+      val select: List[Int] => Int = Selector.select(random.nextInt)
 
-      (0 to 1000).foreach{_ =>
+      (0 to 1000).foreach { _ =>
         val selected = select(chances)
         selected should be >= 0
         selected should be < 3 withClue "the chances has 3 positions"
@@ -51,8 +50,8 @@ class SelectorTest extends WordSpec with Matchers with AppendedClues {
 
     "demo" in {
       val random = new Random(11)
-      val select: List[Int] => Int = Selector.select(random)
-      val chances = List(60,20,10,10)
+      val select: List[Int] => Int = Selector.select(random.nextInt)
+      val chances = List(60, 20, 10, 10)
 
 //      (1 to 20).foreach {_ =>
 //        println(select(chances))
@@ -61,8 +60,9 @@ class SelectorTest extends WordSpec with Matchers with AppendedClues {
         .map(_ => select(chances))
         .groupBy(identity)
         .map(x => (x._1, x._2.size))
-        .toList.sortBy(_._1)
-        .map(x => s"Index ${x._1} was selected ~${x._2/100.0}% times. It had ${chances(x._1)} chances to be selected")
+        .toList
+        .sortBy(_._1)
+        .map(x => s"Index ${x._1} was selected ~${x._2 / 100.0}% times. It had ${chances(x._1)} chances to be selected")
         .mkString("\n")
       println(demo)
 

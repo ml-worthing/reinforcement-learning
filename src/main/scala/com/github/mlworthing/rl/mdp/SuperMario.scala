@@ -36,5 +36,5 @@ case class SuperMario(gamma: Double = 0.9) extends BoardEnvironment[Int, String]
   )
 
   override def stateAt(row: Int, col: Int): Int = row * 4 + col
-
+  override def positionOf(state: Int): (Int, Int) = (state / 4, state % 4)
 }

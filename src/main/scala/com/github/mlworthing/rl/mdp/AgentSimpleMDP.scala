@@ -22,7 +22,7 @@ import com.github.mlworthing.rl.utils.BoardEnvironment
 import scala.collection.mutable
 import scala.util.Random
 
-class AgentSimpleMDP[State, Action](theta: Double = 1e-10)
+class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
     extends Agent[State, Action, BoardEnvironment[State, Action]] {
 
   type StateValue = mutable.Map[State, Double]
@@ -31,45 +31,59 @@ class AgentSimpleMDP[State, Action](theta: Double = 1e-10)
 
     val P: environment.Board = environment.board
 
+    //initial state value function
     val V = mutable.Map(P.keys.map(s => (s, 0d)).toSeq: _*)
 
-    var max_delta = 0d
+    var delta = 0d
     var counter = 0
 
-    val policy = P.map {
+    // selecting random policy
+    val policy: Map[State, Action] = P.map {
       case (state, actionsMap) =>
         (state, actionsMap.keys.zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
     }
 
-    println(policy)
+    println(environment.layout)
+    println()
+    println(s"Evaluating policy:")
+    println()
+    println(environment.show(policy.get, (state: State, action: Action) => f"$state%3s: $action"))
+    println()
 
     do {
 
       val old_V = copy(V)
 
-      P.keys.foreach { state =>
-        V(state) = 0d
+      // for each state on the board
+      P.keys
+        .filterNot(environment.terminalStates.contains)
+        .foreach { state =>
+          // initialize state value to be 0
+          V(state) = 0d
+          // then follow policy
+          val moves: Seq[environment.MoveResult] = P(state)(policy(state))
+          moves.foreach {
+            case (newState, probability, reward) =>
+              val value =
+                if (environment.terminalStates.contains(newState)) reward
+                else reward + gamma * old_V(newState)
 
-        P(state)(policy(state)).foreach {
-          case (newState, probability, reward) =>
-            val value =
-              if (environment.terminalStates.contains(newState)) reward
-              else reward + environment.gamma * old_V(newState)
+              // update the state value
+              V(state) = V(state) + probability * value
+          }
 
-            V(newState) = V(newState) + probability * value
+          delta = Math.abs(difference(old_V, V))
+
         }
-
-      }
-
-      val new_delta = Math.abs(difference(old_V, V))
-      println(new_delta)
-      max_delta = Math.max(max_delta, new_delta)
-
-      println(max_delta, V)
 
       counter = counter + 1
 
-    } while (max_delta > theta && counter < 10)
+    } while (delta > theta && counter < maxIterations)
+
+    println(s"After $counter iterations computed state-value function:")
+    println()
+    println(environment.show(V.get, (state: State, d: Double) => f"$state%3s: $d%+2.2f"))
+    println()
 
     Deterministic(policy)
   }
