@@ -38,7 +38,7 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
     var counter = 0
 
     // selecting random policy
-    val policy: Map[State, Action] = P.map {
+    val policy: Map[State, Action] = P.filterNot(_._2.isEmpty).map {
       case (state, actionsMap) =>
         (state, actionsMap.keys.zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
     }
@@ -46,7 +46,9 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
     println(environment.layout)
     println(s"Evaluating policy:")
     println()
-    println(environment.show(policy.get, (_: State, action: Action) => action.toString, 1))
+    println(
+      environment
+        .show(policy.get, (_: State, action: Action) => action.toString, cellLength = 1, showForTerminalTiles = false))
     println()
 
     do {
@@ -55,12 +57,13 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
 
       // for each state on the board
       P.keys
-        .filterNot(environment.terminalStates.contains)
         .foreach { state =>
           // initialize state value to be 0
           V(state) = 0d
-          // then follow policy
-          val moves: Seq[environment.MoveResult] = P(state)(policy(state))
+          // then move following the actual policy
+          val moves: Seq[environment.MoveResult] =
+            policy.get(state).map(m => P(state)(m)).getOrElse(Seq.empty)
+
           moves.foreach {
             case (newState, probability, reward) =>
               val value =
@@ -81,7 +84,9 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
 
     println(s"After $counter iterations state-value function converged to:")
     println()
-    println(environment.show(V.get, (_: State, d: Double) => f"$d%+2.4f", 10))
+    println(
+      environment
+        .show(V.get, (_: State, d: Double) => f"$d%+2.4f", cellLength = 10, showForTerminalTiles = true))
     println()
 
     Deterministic(policy)

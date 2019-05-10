@@ -106,15 +106,15 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
     val terminalStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isTerminal(tail) => stateAt(r, c) }.toSeq
 
     val board: Board = tileAt.map {
-      case (position, _) =>
+      case (position, tile) =>
         stateAt(position._1, position._2) -> {
-          actionMoves.map {
+          if (isAccessible(tile) && !isTerminal(tile)) actionMoves.map {
             case (action, (move, probability, slips)) =>
               action -> (computeMoveResult(position, move, probability) :: slips.map {
                 case (m, p) => computeMoveResult(position, m, p)
               }.toList)
                 .collect { case Some(m) => m }
-          }
+          } else Map.empty[Action, Seq[MoveResult]]
         }
     }
 
@@ -123,21 +123,31 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
   override def description: String = layout
 
-  def show[V](values: State => Option[V], format: (State, V) => String, cellLength: Int): String =
+  def show[V](
+    values: State => Option[V],
+    format: (State, V) => String,
+    cellLength: Int,
+    showForTerminalTiles: Boolean): String =
     (for ((row, r) <- tiles.zipWithIndex)
       yield
         (for ((tile, c) <- row.zipWithIndex)
           yield {
-            (if (!isAccessible(tile) || isTerminal(tile)) Some(rewardFor(tile).asInstanceOf[V])
-             else values(stateAt(r, c)))
-              .map(v => format(stateAt(r, c), v))
-              .getOrElse(tile)
+            if ((isTerminal(tile) && !showForTerminalTiles) || !isAccessible(tile))
+              tile
+            else if (isTerminal(tile)) {
+              val r = rewardFor(tile)
+              if (Math.abs(r) < 1) f"$r%+.4f" else f"$r%+2.0f"
+            } else
+              values(stateAt(r, c))
+                .map(v => format(stateAt(r, c), v))
+                .getOrElse(tile)
+
           })
-          .map(t => center(t, cellLength))
+          .map(t => centerText(t, cellLength))
           .mkString(" "))
       .mkString("\r\n")
 
-  private def center(string: String, cellLength: Int): String = {
+  private def centerText(string: String, cellLength: Int): String = {
     val length = string.length
     if (length < cellLength) {
       val left = (cellLength - length) / 2
