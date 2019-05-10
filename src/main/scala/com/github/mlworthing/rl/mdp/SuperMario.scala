@@ -29,10 +29,10 @@ case class SuperMario(gamma: Double = 0.9) extends BoardEnvironment[Int, String]
      """.stripMargin
 
   override lazy val actionMoves: Map[String, ActionMoves] = Map(
-    "N" -> (Up, 0.8, Map(Right   -> 0.1, Left -> 0.1)),
-    "E" -> (Right, 0.8, Map(Up   -> 0.1, Down -> 0.1)),
-    "S" -> (Down, 0.8, Map(Right -> 0.1, Left -> 0.1)),
-    "W" -> (Left, 0.8, Map(Up    -> 0.1, Down -> 0.1))
+    "↑" -> (Up, 0.8, Map(Right   -> 0.1, Left -> 0.1)),
+    "→" -> (Right, 0.8, Map(Up   -> 0.1, Down -> 0.1)),
+    "↓" -> (Down, 0.8, Map(Right -> 0.1, Left -> 0.1)),
+    "←" -> (Left, 0.8, Map(Up    -> 0.1, Down -> 0.1))
   )
 
   override def stateAt(row: Int, col: Int): Int = row * 4 + col

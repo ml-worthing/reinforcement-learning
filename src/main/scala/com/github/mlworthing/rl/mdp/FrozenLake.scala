@@ -38,10 +38,10 @@ case class FrozenLake(gamma: Double = 0.9) extends BoardEnvironment[Int, String]
      """.stripMargin
 
   override lazy val actionMoves: Map[String, ActionMoves] = Map(
-    "N" -> (Up, 0.34, Map(Right   -> 0.33, Left -> 0.33)),
-    "E" -> (Right, 0.34, Map(Up   -> 0.33, Down -> 0.33)),
-    "S" -> (Down, 0.34, Map(Right -> 0.33, Left -> 0.33)),
-    "W" -> (Left, 0.34, Map(Up    -> 0.33, Down -> 0.33))
+    "↑" -> (Up, 0.34, Map(Right   -> 0.33, Left -> 0.33)),
+    "→" -> (Right, 0.34, Map(Up   -> 0.33, Down -> 0.33)),
+    "↓" -> (Down, 0.34, Map(Right -> 0.33, Left -> 0.33)),
+    "←" -> (Left, 0.34, Map(Up    -> 0.33, Down -> 0.33))
   )
 
   override def stateAt(row: Int, col: Int): Int = row * 4 + col

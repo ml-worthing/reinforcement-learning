@@ -40,14 +40,18 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   /** Textual layout definition, space and newline separated */
   def layout: String
 
+  /** Possible moves on the board and their respected results */
+  def actionMoves: Map[Action, ActionMoves]
+
   lazy val tiles: Array[Array[String]] = layout.lines
     .map(_.trim)
     .filterNot(_.isEmpty)
     .toArray
     .map(_.split("\\s+"))
 
-  /** Possible moves on the board and their respected results */
-  def actionMoves: Map[Action, ActionMoves]
+  val tileAt: Map[(Int, Int), String] =
+    (for ((row, r) <- tiles.zipWithIndex; (tile, c) <- row.zipWithIndex)
+      yield (r, c) -> tile).toMap
 
   def stateAt(row: Int, col: Int): State
   def positionOf(state: State): (Int, Int)
@@ -85,10 +89,6 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   /** Parses square tiles board */
   private def parseLayout: (Board, Seq[State], Seq[State]) = {
 
-    val tileAt: Map[(Int, Int), String] =
-      (for ((row, r) <- tiles.zipWithIndex; (tile, c) <- row.zipWithIndex)
-        yield (r, c) -> tile).toMap
-
     def fit(i: Int, minInc: Int, maxExc: Int): Int = if (i < minInc) minInc else if (i >= maxExc) maxExc - 1 else i
 
     def computeMoveResult(position: (Int, Int), move: (Int, Int), probability: Double): Option[MoveResult] = {
@@ -123,14 +123,27 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
   override def description: String = layout
 
-  def show[V](values: State => Option[V], format: (State, V) => String): String =
+  def show[V](values: State => Option[V], format: (State, V) => String, cellLength: Int): String =
     (for ((row, r) <- tiles.zipWithIndex)
       yield
         (for ((tile, c) <- row.zipWithIndex)
-          yield values(stateAt(r, c)).map(v => format(stateAt(r, c), v)).getOrElse(tile))
-          .map(t => f"$t%10s")
-          .mkString(" | "))
+          yield {
+            (if (!isAccessible(tile) || isTerminal(tile)) Some(rewardFor(tile).asInstanceOf[V])
+             else values(stateAt(r, c)))
+              .map(v => format(stateAt(r, c), v))
+              .getOrElse(tile)
+          })
+          .map(t => center(t, cellLength))
+          .mkString(" "))
       .mkString("\r\n")
+
+  private def center(string: String, cellLength: Int): String = {
+    val length = string.length
+    if (length < cellLength) {
+      val left = (cellLength - length) / 2
+      (" " * left) + string + (" " * (cellLength - (length + left)))
+    } else string.take(cellLength)
+  }
 
 }
 

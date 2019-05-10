@@ -44,10 +44,9 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
     }
 
     println(environment.layout)
-    println()
     println(s"Evaluating policy:")
     println()
-    println(environment.show(policy.get, (state: State, action: Action) => f"$state%3s: $action"))
+    println(environment.show(policy.get, (_: State, action: Action) => action.toString, 1))
     println()
 
     do {
@@ -80,9 +79,9 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
 
     } while (delta > theta && counter < maxIterations)
 
-    println(s"After $counter iterations computed state-value function:")
+    println(s"After $counter iterations state-value function converged to:")
     println()
-    println(environment.show(V.get, (state: State, d: Double) => f"$state%3s: $d%+2.2f"))
+    println(environment.show(V.get, (_: State, d: Double) => f"$d%+2.4f", 10))
     println()
 
     Deterministic(policy)
