@@ -71,7 +71,7 @@ object Policy {
     )
   )
 
-  private def createArbitraryΠP[S, A](states: StateSet[S], actionSet: ActionSet[S, A], chanceProvider: => Double): ΠP[S, A] = {
+  private def createArbitraryΠP[S, A](states: States[S], actionSet: Actions[S, A], chanceProvider: => Double): ΠP[S, A] = {
     val policy: ΠP[S, A] = mutable.Map[(S, A), P]()
 
     states.foreach { s =>

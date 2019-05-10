@@ -31,16 +31,16 @@ package object mdpalgorithm {
   /**
     * Actions for given S,A
     */
-  type ActionSet[S, A] = S => Iterable[A]
+  type Actions[S, A] = S => Iterable[A]
 
   /**
     * Rewards for given (state,action) pair
     */
-  type RewardSet[S, A, R] = (S, A) => Iterable[R]
+  type Rewards[S, A, R] = (S, A) => Iterable[R]
 
   /**
     * All states for particular MDP
     */
-  type StateSet[S] = Iterable[S]
+  type States[S] = Iterable[S]
 
 }

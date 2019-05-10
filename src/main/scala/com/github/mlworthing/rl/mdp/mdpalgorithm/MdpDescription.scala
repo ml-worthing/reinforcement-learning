@@ -27,9 +27,9 @@ import com.github.mlworthing.rl.utils.MathNotation._
   * @tparam A Action
   */
 case class MdpDescription[S, A](
-                                 states: StateSet[S],
-                                 actions: ActionSet[S, A],
-                                 rewards: RewardSet[S, A, R],
+                                 states: States[S],
+                                 actions: Actions[S, A],
+                                 rewards: Rewards[S, A, R],
                                  p: (S, R, S, A) => P
                                ) {
 
