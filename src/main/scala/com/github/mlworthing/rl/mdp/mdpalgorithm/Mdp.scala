@@ -20,20 +20,11 @@ import java.lang.Math._
 
 import com.github.mlworthing.rl.utils.MathNotation._
 
-import scala.collection.mutable
 
 /**
   * The object providing the API for solving MDP problems
   */
 object Mdp {
-
-  /**
-    * Create a value-function which always results in zeros
-    */
-  def createValueFunction0[S, A]()(implicit c: MdpContext[S,A]): mutable.Map[S, P] = {
-    import c.mdpDescription._
-    (mutable.Map.newBuilder[S, Double] ++= states.map(s => (s, 0.0))).result()
-  }
 
 
   /**
@@ -41,10 +32,10 @@ object Mdp {
     * Based on http://incompleteideas.net/book/RLbook2018trimmed.pdf, page 75
     * It mutates the v
     */
-  def evaluatePolicy[S,A](v: mutable.Map[S, R],
-                              π: Policy[S, A],
-                              theta: Double = 0.01 //acceptable error
-                             )(implicit c: MdpContext[S,A]): Unit = {
+  def evaluatePolicy[S, A](v: ValueFunction[S],
+                           π: Policy[S, A],
+                           theta: Double = 0.01 //acceptable error
+                          )(implicit c: MdpContext[S, A]): Unit = {
     import c._
     import mdpDescription._
 
@@ -62,13 +53,12 @@ object Mdp {
     } while (delta < theta)
   }
 
-
   /**
     * Policy Iteration algorithm, http://incompleteideas.net/book/RLbook2018trimmed.pdf, page 80
     */
-  def iteratePolicy[S,A](v: mutable.Map[S, R],
-                         π: Policy[S, A]
-                   )(implicit c: MdpContext[S,A]): Unit = {
+  def iteratePolicy[S, A](v: ValueFunction[S],
+                          π: Policy[S, A]
+                         )(implicit c: MdpContext[S, A]): Unit = {
     import c._
     import mdpDescription._
 
@@ -87,6 +77,35 @@ object Mdp {
       evaluatePolicy(v, π)
       improvePolicy()
     } while (!isPolicyStable)
+  }
+
+  /**
+    * Value Iteration algorithm for estimating Policy to be the BestPolicy,
+    * http://incompleteideas.net/book/RLbook2018trimmed.pdf, page 83
+    *
+    * @param c
+    * @tparam S
+    * @tparam A
+    */
+  def iterateValue[S, A](theta: Double = 0.01 //acceptable error
+                        )(implicit c: MdpContext[S, A]): Policy[S, A] = {
+    import c._
+    import mdpDescription._
+
+    val v: ValueFunction[S] = ValueFunction.createRandomValueFunction[S,A]()
+
+    var delta = 0.0
+    do {
+      states.foreach { s =>
+        val oldV = v(s)
+        v(s) = max_(actions(s))(a =>
+          Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś)))
+        )
+        delta = max(delta, abs(oldV - v(s)))
+      }
+    } while (delta < theta)
+
+    Policy.createPolicy(v)
   }
 
 

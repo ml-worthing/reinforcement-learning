@@ -16,26 +16,26 @@
 
 package com.github.mlworthing.rl.mdp.mdpalgorithm
 
-import org.scalatest.FreeSpec
+import com.github.mlworthing.rl.UnitSpec
+import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpTestData.GridWorld3x3
+import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpTestData.GridWorld3x3.{State, mdpContext}
 
-import scala.collection.mutable
+class StatesSpec extends UnitSpec {
 
-class MdpExamples extends FreeSpec {
+  "states" in {
 
-  "3x3 grid world" in {
+    val states: States[State] = GridWorld3x3.states
 
-    import MdpTestData.GridWorld3x3._
-    implicit val c = mdpContext
+    states.toList shouldBe List(
+      GridWorld3x3.state3Terminal,
+      GridWorld3x3.state9Terminal,
+      GridWorld3x3.state1,
+      GridWorld3x3.state2,
+      GridWorld3x3.state4,
+      GridWorld3x3.state6,
+      GridWorld3x3.state7,
+      GridWorld3x3.state8
+    )
 
-    val π: Policy[State, Action] = Policy.createRandomPolicy()
-    val v: ValueFunction[State] = ValueFunction.createRandomValueFunction[State, Action]()
-    Mdp.evaluatePolicy(v, π)
-    Mdp.iteratePolicy(v, π)
-
-    val π1 = Mdp.iterateValue() //todo: test iterateValue
-
-    //TODO: true demo!?
   }
-
-
 }

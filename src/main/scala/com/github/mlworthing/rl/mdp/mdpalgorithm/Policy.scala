@@ -18,38 +18,36 @@ package com.github.mlworthing.rl.mdp.mdpalgorithm
 
 import java.lang.Math.abs
 
-import com.github.mlworthing.rl.utils.MathNotation.argmax
+import com.github.mlworthing.rl.mdp.mdpalgorithm.Policy.ΠProbability
+import com.github.mlworthing.rl.utils.MathNotation._
 
 import scala.collection.mutable
-import scala.util.Random
 
 /**
   * Mutable Policy.
   */
-class Policy[S, A](
-                    mdpDescription: MdpDescription[S, A],
-                    πpFactory: MdpDescription[S, A] => Policy.ΠP[S, A]
-                  ) {
+class Policy[S, A](πpFactory: MdpDescription[S, A] => Policy.ΠProbability[S, A])(implicit c: MdpContext[S, A]) {
 
-  import mdpDescription._
+  import c.mdpDescription._
 
-  private val πp = πpFactory(mdpDescription)
+  private val πProbability: ΠProbability[S, A] = πpFactory(c.mdpDescription)
 
   /**
-    * Update policy so it promotes action 'a' for a given state 's'
+    * Update policy so it promotes action 'a' for a given state 's'.
+    * After update `πProbability(s)` will return `a` and `πProbability(s,a)` will return probability of `1.0`
     * Such syntax available: 'policy(s) = a'
     */
   def update(s: S, a: A): Unit = {
-    actions(s).foreach(a => πp((s, a)) = 0.0)
-    πp((s, a)) = 1.0
+    actions(s).foreach(a => πProbability((s, a)) = 0.0)
+    πProbability((s, a)) = 1.0
   }
 
   /**
     * Returns a probability of selecting action in a given state 's'
     */
-  def apply(s: S, a: A): P = πp((s, a))
+  def apply(s: S, a: A): P = πProbability((s, a))
 
-  def greedyAction(s: S): A = argmax(actions(s))(πp(s, _))
+  def greedyAction(s: S): A = argmax(actions(s))(πProbability(s, _))
 
 }
 
@@ -60,10 +58,9 @@ object Policy {
     * Policy as a probability.
     * For given state 's' it gives a probability of choosing action 'a'.
     */
-  type ΠP[S, A] = mutable.Map[(S, A), P]
+  type ΠProbability[S, A] = mutable.Map[(S, A), P]
 
-  def randomPolicy[S, A]()(implicit c: MdpContext[S,A]): Policy[S, A] = new Policy[S, A](
-    mdpDescription = c.mdpDescription,
+  def createRandomPolicy[S, A]()(implicit c: MdpContext[S, A]): Policy[S, A] = new Policy[S, A](
     πpFactory = d => createArbitraryΠP(
       states = d.states,
       actionSet = d.actions,
@@ -71,8 +68,8 @@ object Policy {
     )
   )
 
-  private def createArbitraryΠP[S, A](states: States[S], actionSet: Actions[S, A], chanceProvider: => Double): ΠP[S, A] = {
-    val policy: ΠP[S, A] = mutable.Map[(S, A), P]()
+  private def createArbitraryΠP[S, A](states: States[S], actionSet: Actions[S, A], chanceProvider: => Double): ΠProbability[S, A] = {
+    val policy: ΠProbability[S, A] = mutable.Map[(S, A), P]()
 
     states.foreach { s =>
       var totalChances: Double = 0
@@ -92,5 +89,21 @@ object Policy {
       }
     }
     policy
+  }
+
+  def createPolicy[S, A](v: ValueFunction[S])(implicit c: MdpContext[S, A]): Policy[S, A] = {
+    import c._
+    import mdpDescription._
+    val πprobability = mutable.Map[(S, A), P]().withDefaultValue(0.0)
+    val π = new Policy[S, A](_ => πprobability)
+
+    //update π so it returns action according to v
+    //http://incompleteideas.net/book/RLbook2018trimmed.pdf, page 83
+    states.foreach(s =>
+      π(s) = argmax(actions(s))(a =>
+        Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś)))
+      )
+    )
+    π
   }
 }

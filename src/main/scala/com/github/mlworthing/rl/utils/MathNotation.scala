@@ -55,4 +55,15 @@ object MathNotation {
   }
 
   def argmax[T](domain: Iterable[T])(f: T => Double): T = domain.maxBy(f)
+
+  /**
+    * The same as {{{
+    *   xs.map(f).max
+    * }}}
+    * but does not allocate intermediate array
+    */
+  def max_[T](xs: Iterable[T])(f: T => Double): Double = xs.tail.foldLeft(f(xs.head)){ (acc, curr) =>
+    val c = f(curr)
+    if(c > acc) c else acc
+  }
 }

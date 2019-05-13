@@ -43,6 +43,13 @@ class MathNotationSpec extends FreeSpec with Matchers with AppendedClues {
       argmax(args)(x => x + 10) shouldBe 6
       argmax(args)(x => x % 3) shouldBe 2 withClue "returns first argument"
     }
+
+    "max" in {
+      val args = List(1, 2, 3, 4, 5, 6)
+      max_(args)(_ + 10.0) shouldBe 16
+      max_(List(9.0))(identity) shouldBe 9.0
+
+    }
   }
 
 

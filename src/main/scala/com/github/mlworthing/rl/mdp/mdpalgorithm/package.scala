@@ -37,10 +37,4 @@ package object mdpalgorithm {
     * Rewards for given (state,action) pair
     */
   type Rewards[S, A, R] = (S, A) => Iterable[R]
-
-  /**
-    * All states for particular MDP
-    */
-  type States[S] = Iterable[S]
-
 }
