@@ -67,7 +67,7 @@ object Mdp {
 
     def setPolicyStable(oldAction: A, currentAction: A): Unit = if (oldAction == currentAction) isPolicyStable = true
 
-    def improvePolicy(): Unit = states.foreach { s: S =>
+    def improvePolicy(): Unit = states.nonTerminalStates.foreach { s: S =>
       val oldAction = π.greedyAction(s)
       π(s) = argmax(actions(s))(a => Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś))))
       setPolicyStable(oldAction, π.greedyAction(s))
@@ -96,7 +96,7 @@ object Mdp {
 
     var delta = 0.0
     do {
-      states.foreach { s =>
+      states.nonTerminalStates.foreach { s =>
         val oldV = v(s)
         v(s) = max_(actions(s))(a =>
           Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś)))

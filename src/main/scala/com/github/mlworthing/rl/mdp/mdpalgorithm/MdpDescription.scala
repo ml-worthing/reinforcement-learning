@@ -33,20 +33,48 @@ case class MdpDescription[S, A](
                                  p: (S, R, S, A) => P
                                ) {
 
+  states.nonTerminalStates.foreach(s =>
+    require(
+      actions(s).nonEmpty,
+      s"Non terminal states should have at least one action available. State [state=$s] has no available actions"
+    )
+  )
+
+  states.terminalStates.foreach(s =>
+    require(
+      actions(s).isEmpty,
+      s"Terminal states should not have any actions available. State [state=$s] had actions [${actions(s).mkString(",")}]"
+    )
+  )
+
+  states.nonTerminalStates.foreach{ s =>
+
+    //sum of probabilities to reach state s` given that you were in state s and chosen action a
+    val totalTransitionProbabilityTransitioning = Σ(actions(s))(a => Σ(ś(s,a))(ś => transitionP(ś, s, a)))
+
+    require(totalTransitionProbabilityTransitioning > 0,
+      s"Erroneous MdpDescription. Sum of probabilities p(ś, [s=$s], a]) was 0. There is no transition available to any state given (s,a)"
+    )
+  }
+
+
   /**
     * Probability of transition to state 'ś' after selection of (state,action) pair
     */
   def transitionP(ś: S, s: S, a: A): P = Σ(rewards(s, a))(r => p(ś, r, s, a))
 
   /**
-    * Possible destinations of state for given (state,action) pair
+    * Possible destinations of state for given (state,action) pair.
+    * Results in map in which for each (S,A) probability of transition is non-zero.
     */
   lazy val ś: Map[(S, A), Iterable[S]] = {
     (for {
-      s <- states
+      s <- states.nonTerminalStates
       a <- actions(s)
       r <- rewards(s, a)
-    } yield ((s, a), states.filter(p(_, r, s, a) != 0))
+      destinations = states.filter(p(_, r, s, a) != 0)
+      if destinations.nonEmpty
+    } yield ((s, a), destinations)
       ).toMap
   }
 

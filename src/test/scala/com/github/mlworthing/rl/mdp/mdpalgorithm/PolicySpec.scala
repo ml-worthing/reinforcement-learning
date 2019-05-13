@@ -25,31 +25,32 @@ class PolicySpec extends UnitSpec {
     import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpTestData.GridWorld3x3._
     implicit val c = mdpContext
 
-    val π: Policy[State, Action] = Policy.createRandomPolicy()
+    val randomπ: Policy[State, Action] = Policy.createRandomPolicy()
 
-    π(state1, Up) shouldBe 0.045774920160791814
-    π(state1, Down) shouldBe 0.22688968376926685
-    π(state1, Right) shouldBe 0.4214923975812657  //the highest probability for state1
-    π(state1, Left) shouldBe 0.30584299848867563
+    randomπ(state1, Up) shouldBe 0.6939573922955898 //the highest probability for state1
+    intercept[UnsupportedOperationException](randomπ(state1, Down)) should have message "In state [1] an action [Down] is not valid"
+    randomπ(state1, Right) shouldBe 0.30604260770441016
+    intercept[UnsupportedOperationException](randomπ(state1, Left))  should have message "In state [1] an action [Left] is not valid"
 
-    π.greedyAction(state1) shouldBe Right withClue "the highest probability for state1 was for for action Right"
-    π.greedyAction(state2) shouldBe Left
-    π.greedyAction(state3Terminal) shouldBe Up
-    π.greedyAction(state4) shouldBe Down
-    π.greedyAction(state6) shouldBe Right
-    π.greedyAction(state7) shouldBe Right
-    π.greedyAction(state8) shouldBe Right
-    π.greedyAction(state9Terminal) shouldBe Left
+    randomπ.greedyAction(state1) shouldBe Up withClue "the highest probability for state1 was for for action Up"
+    randomπ.greedyAction(state2) shouldBe Right
+    intercept[UnsupportedOperationException](randomπ.greedyAction(state3Terminal)) should have message "No actions available for state [state=3]. Is it terminal state?"
+    randomπ.greedyAction(state4) shouldBe Down
+    randomπ.greedyAction(state6) shouldBe Up
+    randomπ.greedyAction(state7) shouldBe Down
+    randomπ.greedyAction(state8) shouldBe Right
+    intercept[UnsupportedOperationException](randomπ.greedyAction(state9Terminal)) should have message "No actions available for state [state=9]. Is it terminal state?"
 
 
     //now update
-    π(state1) = Down
-    π(state1, Up) shouldBe 0.0
-    π(state1, Down) shouldBe 1.0
-    π(state1, Right) shouldBe 0.0
-    π(state1, Left) shouldBe 0.0
+    randomπ(state1) = Right //was Up
+    randomπ.greedyAction(state1) shouldBe Right
 
-    π.greedyAction(state1) shouldBe Down
+    randomπ(state1, Right) shouldBe 1.0
+    randomπ(state1, Up) shouldBe 0.0
+    intercept[UnsupportedOperationException](randomπ(state1, Down)) should have message "In state [1] an action [Down] is not valid"
+    intercept[UnsupportedOperationException](randomπ(state1, Left))  should have message "In state [1] an action [Left] is not valid"
+
 
   }
 }

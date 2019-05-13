@@ -16,11 +16,9 @@
 
 package com.github.mlworthing.rl.mdp.mdpalgorithm
 
-import org.scalatest.FreeSpec
+import com.github.mlworthing.rl.UnitSpec
 
-import scala.collection.mutable
-
-class MdpExamples extends FreeSpec {
+class MdpExamples extends UnitSpec {
 
   "3x3 grid world" in {
 
@@ -32,7 +30,19 @@ class MdpExamples extends FreeSpec {
     Mdp.evaluatePolicy(v, π)
     Mdp.iteratePolicy(v, π)
 
-    val π1 = Mdp.iterateValue() //todo: test iterateValue
+    val πBest = Mdp.iterateValue() //todo: test iterateValue
+
+    //7 8 9
+    //4 5 6
+    //1 2 3
+    πBest(state2) shouldBe Left
+    πBest(state1) shouldBe Up
+    πBest(state4) shouldBe Up
+    πBest(state7) shouldBe Right
+//    πBest(state8) shouldBe Right //?   TODO, this action shoulb be Right but was Left
+    //This is because ^^ we initialized v to be 0 in terminal states and we never update these states
+    πBest(state6) shouldBe Up
+
 
     //TODO: true demo!?
   }

@@ -26,11 +26,13 @@ import scala.collection.mutable
 /**
   * Mutable Policy.
   */
-class Policy[S, A](πpFactory: MdpDescription[S, A] => Policy.ΠProbability[S, A])(implicit c: MdpContext[S, A]) {
+class Policy[S, A] private[Policy](πpFactory: MdpDescription[S, A] => Policy.ΠProbability[S, A])(implicit c: MdpContext[S, A]) {
 
   import c.mdpDescription._
 
-  private val πProbability: ΠProbability[S, A] = πpFactory(c.mdpDescription)
+  private val πProbability: ΠProbability[S, A] = πpFactory(c.mdpDescription).withDefault(sa =>
+    throw new UnsupportedOperationException(s"In state [${sa._1}] an action [${sa._2}] is not valid")
+  )
 
   /**
     * Update policy so it promotes action 'a' for a given state 's'.
@@ -47,8 +49,14 @@ class Policy[S, A](πpFactory: MdpDescription[S, A] => Policy.ΠProbability[S, A
     */
   def apply(s: S, a: A): P = πProbability((s, a))
 
-  def greedyAction(s: S): A = argmax(actions(s))(πProbability(s, _))
+  def apply(s: S): A = greedyAction(s)
 
+  def greedyAction(s: S): A = try {
+    argmax(actions(s))(πProbability(s, _))
+  } catch {
+    case e: UnsupportedOperationException if e.getMessage == "empty.maxBy" =>
+      throw new UnsupportedOperationException(s"No actions available for state [state=$s]. Is it terminal state?")
+  }
 }
 
 
@@ -91,19 +99,28 @@ object Policy {
     policy
   }
 
+  private def createEmptyPolicy[S,A]()(implicit c: MdpContext[S, A]): Policy[S, A] = {
+    new Policy[S, A](_ => mutable.Map[(S, A), P]().withDefaultValue(0.0))
+  }
+
   def createPolicy[S, A](v: ValueFunction[S])(implicit c: MdpContext[S, A]): Policy[S, A] = {
     import c._
     import mdpDescription._
-    val πprobability = mutable.Map[(S, A), P]().withDefaultValue(0.0)
-    val π = new Policy[S, A](_ => πprobability)
+    val π = createEmptyPolicy()
 
     //update π so it returns action according to v
     //http://incompleteideas.net/book/RLbook2018trimmed.pdf, page 83
-    states.foreach(s =>
+    states.nonTerminalStates.foreach(s =>
       π(s) = argmax(actions(s))(a =>
         Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś)))
       )
     )
+    π
+  }
+
+  def createPolicy[S, A](sa: (S, A)*)(implicit c: MdpContext[S, A]): Policy[S, A] = {
+    val π = createEmptyPolicy()
+    sa.foreach((sa: (S, A)) => π(sa._1) = sa._2)
     π
   }
 }

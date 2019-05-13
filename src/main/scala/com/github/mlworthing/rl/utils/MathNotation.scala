@@ -54,6 +54,27 @@ object MathNotation {
     accumulator
   }
 
+  //TODO: missing test
+  def Σ[X, Y, Z](xs: Iterable[X], ys: Iterable[Y], zs: Iterable[Z])(f: (X, Y, Z) => Double): Double = {
+    //this is not daemon of speed
+    val ix = xs.iterator
+
+    var accumulator = 0.0
+    while (ix.hasNext) {
+      val x = ix.next()
+      val iy = ys.iterator
+      while (iy.hasNext) {
+        val y = iy.next()
+        val iz = zs.iterator
+        while(iz.hasNext) {
+          val z = iz.next()
+          accumulator += f(x, y, z)
+        }
+      }
+    }
+    accumulator
+  }
+
   def argmax[T](domain: Iterable[T])(f: T => Double): T = domain.maxBy(f)
 
   /**

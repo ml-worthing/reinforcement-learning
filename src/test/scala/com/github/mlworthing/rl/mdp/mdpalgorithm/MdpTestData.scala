@@ -45,9 +45,17 @@ object MdpTestData {
       terminalStates = List(state3Terminal,state9Terminal),
       nonTerminalStates = List(state1,state2,state4,state6,state7,state8)
     )
-    val d: MdpDescription[State, Action] = MdpDescription[State, Action](
+    val mdpDescription: MdpDescription[State, Action] = MdpDescription[State, Action](
       states = states,
-      actions = _ => List(Up, Down, Left, Right),
+      actions = {
+        case `state1` => List(Up, Right)
+        case `state2` => List(Left, Right)
+        case `state4` => List(Up, Down)
+        case `state6` => List(Up, Down)
+        case `state7` => List(Right, Down)
+        case `state8` => List(Left, Right)
+        case _ => Nil
+      },
       rewards = {
         case (`state2`, Right) => -1.0
         case (`state6`, Down) => -1.0
@@ -56,24 +64,24 @@ object MdpTestData {
         case (_, _) => 0.0
       },
       p = {
-        case (`state4`, 0.0, 1, Up) => 1.0
-        case (`state2`, 0.0, 1, Right) => 1.0
-        case (`state1`, 0.0, 2, Left) => 1.0
-        case (`state3Terminal`, -1.0, 2, Right) => 1.0
-        case (`state7`, 0.0, 4, Up) => 1.0
-        case (`state1`, 0.0, 4, Down) => 1.0
-        case (`state9Terminal`, 1.0, 6, Up) => 1.0
-        case (`state3Terminal`, -1.0, 6, Down) => 1.0
-        case (`state8`, 0.0, 7, Right) => 1.0
-        case (`state4`, 0.0, 7, Down) => 1.0
-        case (`state9Terminal`, 1.0, 8, Right) => 1.0
-        case (`state7`, 0.0, 8, Left) => 1.0
+        case (`state4`, 0.0, `state1`, Up) => 1.0
+        case (`state2`, 0.0, `state1`, Right) => 1.0
+        case (`state1`, 0.0, `state2`, Left) => 1.0
+        case (`state3Terminal`, -1.0, `state2`, Right) => 1.0
+        case (`state7`, 0.0, `state4`, Up) => 1.0
+        case (`state1`, 0.0, `state4`, Down) => 1.0
+        case (`state9Terminal`, 1.0, `state6`, Up) => 1.0
+        case (`state3Terminal`, -1.0, `state6`, Down) => 1.0
+        case (`state8`, 0.0, `state7`, Right) => 1.0
+        case (`state4`, 0.0, `state7`, Down) => 1.0
+        case (`state9Terminal`, 1.0, `state8`, Right) => 1.0
+        case (`state7`, 0.0, `state8`, Left) => 1.0
         case _ => 0.0
       }
     )
 
     //def because it creates random and you don't wan't to reuse the same random in many tests
-    def mdpContext: MdpContext[State, Action] = MdpContext(d)
+    def mdpContext: MdpContext[State, Action] = MdpContext(mdpDescription)
   }
 
 
