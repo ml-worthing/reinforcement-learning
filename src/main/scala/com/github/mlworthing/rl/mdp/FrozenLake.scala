@@ -27,7 +27,7 @@ import utils.{BoardEnvironment, S0FGXFormat, UpRightDownLeft}
   * and one terminal state rewarding 1. The probability of moving on ice in the selected
   * direction should be less than 1.
   */
-case class FrozenLake(gamma: Double = 0.9) extends BoardEnvironment[Int, String] with UpRightDownLeft with S0FGXFormat {
+object FrozenLake extends BoardEnvironment[Int, String] with UpRightDownLeft with S0FGXFormat {
 
   override lazy val layout: String =
     s"""

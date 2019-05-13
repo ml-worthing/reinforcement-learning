@@ -27,7 +27,7 @@ import scala.util.Random
 trait Policy[State, Action] {
 
   /** Run this policy in the given environment and collect rewards */
-  def runWith(environment: Environment[State, Action], maxIterations: Int): Double
+  def execute(environment: Environment[State, Action], maxIterations: Int): Double
 }
 
 //----------------
@@ -37,21 +37,21 @@ trait Policy[State, Action] {
 /** The best single action to take */
 case class Winner[A](action: A) extends Policy[Unit, A] {
 
-  override def runWith(environment: Environment[Unit, A], maxIterations: Int): Double =
+  override def execute(environment: Environment[Unit, A], maxIterations: Int): Double =
     environment.send(action).reward
 }
 
 /** The best plan, sequence of actions to take */
 case class Trajectory[S, A](actions: Seq[A]) extends Policy[S, A] {
 
-  override def runWith(environment: Environment[S, A], maxIterations: Int): Double =
+  override def execute(environment: Environment[S, A], maxIterations: Int): Double =
     actions.foldLeft(0d)((s, a) => s + environment.send(a).reward)
 }
 
 /** The best action to take given the current state */
 case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
 
-  override def runWith(environment: Environment[S, A], maxIterations: Int): Double = {
+  override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
     @tailrec
     def evaluate(s: S, rewardSum: Double, counter: Int): Double = {
       val observation = environment.send(policy(s))
@@ -82,7 +82,7 @@ case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[
     })
   }
 
-  override def runWith(environment: Environment[S, A], maxIterations: Int): Double = {
+  override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
     @tailrec
     def evaluate(s: S, rewardSum: Double, counter: Int): Double = {
       val random = Random.nextDouble()

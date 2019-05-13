@@ -69,21 +69,14 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   @volatile private var currentState: State = initial._1
 
   override def send(action: Action): Observation = {
-    val moveResults: Seq[MoveResult] = board(currentState)(action)
     val random = Random.nextDouble()
-    val (newState, instantReward) = moveResults
-      .collectFirst {
-        case (state, probabilityLimit, reward) if random <= probabilityLimit => (state, reward)
-      }
-      .getOrElse((moveResults.head._1, moveResults.head._3))
-
-    currentState = newState
-
-    Observation(
-      newState,
-      instantReward,
-      actions,
-      initialStates.contains(currentState) || terminalStates.contains(currentState))
+    val moves = board(currentState)(action)
+    val (_, (ns, _, reward)) = moves.tail.foldLeft((moves.head._2, moves.head)) {
+      case ((acc, move), newMove) =>
+        (acc + newMove._2, if (random <= acc) move else newMove)
+    }
+    currentState = ns
+    Observation(ns, reward, actions, terminalStates.contains(ns))
   }
 
   /** Parses square tiles board */
@@ -105,16 +98,22 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
     val initialStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isStart(tail)     => stateAt(r, c) }.toSeq
     val terminalStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isTerminal(tail) => stateAt(r, c) }.toSeq
 
-    val board: Board = tileAt.map {
-      case (position, tile) =>
-        stateAt(position._1, position._2) -> {
-          if (isAccessible(tile) && !isTerminal(tile)) actionMoves.map {
-            case (action, (move, probability, slips)) =>
-              action -> (computeMoveResult(position, move, probability) :: slips.map {
-                case (m, p) => computeMoveResult(position, m, p)
-              }.toList)
-                .collect { case Some(m) => m }
-          } else Map.empty[Action, Seq[MoveResult]]
+    val board: Board = tileAt.collect {
+      case (position, tile) if isAccessible(tile) =>
+        val state = stateAt(position._1, position._2)
+        state -> {
+          if (isTerminal(tile)) {
+            actionMoves.map {
+              case (action, _) => action -> Seq((state, 1d, rewardFor(tile)))
+            }
+          } else
+            actionMoves.map {
+              case (action, (move, probability, slips)) =>
+                action -> (computeMoveResult(position, move, probability) :: slips.map {
+                  case (m, p) => computeMoveResult(position, m, p)
+                }.toList)
+                  .collect { case Some(m) => m }
+            }
         }
     }
 
@@ -134,10 +133,7 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
           yield {
             if ((isTerminal(tile) && !showForTerminalTiles) || !isAccessible(tile))
               tile
-            else if (isTerminal(tile)) {
-              val r = rewardFor(tile)
-              if (Math.abs(r) < 1) f"$r%+.4f" else f"$r%+2.0f"
-            } else
+            else
               values(stateAt(r, c))
                 .map(v => format(stateAt(r, c), v))
                 .getOrElse(tile)

@@ -17,7 +17,7 @@
 package com.github.mlworthing.rl
 package bandit
 
-import com.github.mlworthing.rl.utils.AgentEvaluator
+import com.github.mlworthing.rl.utils.AgentExecutor
 import org.scalatest.{FreeSpec, Matchers}
 import sun.management.resources.agent
 
@@ -35,14 +35,14 @@ class KArmedBanditTest extends FreeSpec with Matchers {
 
     val kArmedBandit = new KArmedBandit(arms)
 
-    val evaluator = AgentEvaluator(
+    val executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyStationaryProblemAgent[Int](0.2, _),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy stationary agent\nwith regard to the number of steps"
     )
 
-    val stats = evaluator.evaluate(kArmedBandit, 100)
+    val stats = executor.execute(kArmedBandit, 100)
 
     stats.print
     stats.maxRate should be > 99.0d
@@ -52,14 +52,14 @@ class KArmedBanditTest extends FreeSpec with Matchers {
 
     val kArmedBandit = new KArmedBandit(arms)
 
-    val evaluator = AgentEvaluator(
+    val executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.2, 0.1, _),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy non-stationary agent\nwith regard to the number of steps"
     )
 
-    val stats = evaluator.evaluate(kArmedBandit, 100)
+    val stats = executor.execute(kArmedBandit, 100)
 
     stats.print
     stats.maxRate should be > 99.0d

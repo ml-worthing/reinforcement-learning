@@ -18,25 +18,25 @@ package com.github.mlworthing.rl
 package utils
 
 /**
-  * Evaluates success rate as a function of agent's configuration parameter.
+  * Computes success rate as a function of agent's configuration parameter.
   *
   * @param expected - the best solution
   * @param agent - agent creator
-  * @param configurations - configurations to evaluate
+  * @param configurations - configurations to execute
   */
-case class AgentEvaluator[State, Action, Config, E <: Environment[State, Action]](
+case class AgentExecutor[State, Action, Config, E <: Environment[State, Action]](
   expected: Policy[State, Action],
   agent: Config => Agent[State, Action, E],
   configurations: Iterable[Config],
   description: String) {
 
-  def evaluate(environment: => E, numberOfSamples: Int): EvaluationResults[Config] = {
+  def execute(environment: => E, numberOfSamples: Int): ExecutionResults[Config] = {
     val rates = configurations.map { config =>
       val successful = (0 until numberOfSamples)
         .count(_ => agent(config).solve(environment) == expected)
       val successRate = (successful * 100d) / numberOfSamples
       (config, successRate)
     }
-    EvaluationResults(description + "\n" + environment.description, rates.toSeq, numberOfSamples)
+    ExecutionResults(description + "\n" + environment.description, rates.toSeq, numberOfSamples)
   }
 }

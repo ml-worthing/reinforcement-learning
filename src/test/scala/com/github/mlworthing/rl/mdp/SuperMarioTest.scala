@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl
-package mdp
+package com.github.mlworthing.rl.mdp
 
 import com.github.mlworthing.rl.utils.PolicyExecutor
 import org.scalatest.{FreeSpec, Matchers}
 
-class FrozenLakeTest extends FreeSpec with Matchers {
+class SuperMarioTest extends FreeSpec with Matchers {
 
-  "evaluate a policy for a Frozen Lake" in {
+  "evaluate a policy for a Super Mario" in {
 
     val agent = new AgentSimpleMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
-    val policy = agent.solve(FrozenLake)
+    val policy = agent.solve(SuperMario)
 
-    PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
+    PolicyExecutor.execute(policy, SuperMario, maxIterations = 1000, numberOfSamples = 1000)
+
   }
 }

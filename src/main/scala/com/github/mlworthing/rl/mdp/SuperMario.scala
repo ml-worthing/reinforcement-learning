@@ -19,7 +19,7 @@ package mdp
 
 import utils.{BoardEnvironment, S0FGXFormat, UpRightDownLeft}
 
-case class SuperMario(gamma: Double = 0.9) extends BoardEnvironment[Int, String] with UpRightDownLeft with S0FGXFormat {
+object SuperMario extends BoardEnvironment[Int, String] with UpRightDownLeft with S0FGXFormat {
 
   override lazy val layout: String =
     s"""
