@@ -22,7 +22,7 @@ object MdpTestData {
     *  3x3 grid world, wall at 5, goal at 9, pitfall at 3 and explicit transition probability
     */
   object GridWorld3x3 {
-    private implicit def toSeq[T](t: T): Seq[T] = Seq(t)
+    import com.github.mlworthing.rl.utils.ToSeq._
 
     type State = Int
 

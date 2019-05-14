@@ -82,10 +82,6 @@ object Mdp {
   /**
     * Value Iteration algorithm for estimating Policy to be the BestPolicy,
     * http://incompleteideas.net/book/RLbook2018trimmed.pdf, page 83
-    *
-    * @param c
-    * @tparam S
-    * @tparam A
     */
   def iterateValue[S, A](theta: Double = 0.01 //acceptable error
                         )(implicit c: MdpContext[S, A]): Policy[S, A] = {
