@@ -54,7 +54,7 @@ class FrozenLakeTest extends FreeSpec with Matchers {
         case (s, a) => board(s)(a).map(_._3)
       },
       p = {
-        case (ś, r, s, a) => board(s)(a).find(_._1 == ś).map(_._2).getOrElse(0.0)
+        case (ś, r, s, a) => board(s)(a).find(x => x._1 == ś && x._3 == r).map(_._2).getOrElse(0.0)
       }
     )
 
