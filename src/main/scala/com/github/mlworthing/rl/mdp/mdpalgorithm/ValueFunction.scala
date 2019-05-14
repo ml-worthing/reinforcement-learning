@@ -24,6 +24,11 @@ class ValueFunction[S](private[ValueFunction] val v: mutable.Map[S, R]) extends 
 
   /**
     * Synchronised update so it's thread safe.
+    *
+    * {{{
+    *   val v: ValueFunction[S,A] = ...
+    *   v(s1) = 120.5
+    * }}}
     */
   def update(s: S, r: R) = v.synchronized(v.update(s, r))
 

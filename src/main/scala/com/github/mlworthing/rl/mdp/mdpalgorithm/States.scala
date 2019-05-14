@@ -16,6 +16,9 @@
 
 package com.github.mlworthing.rl.mdp.mdpalgorithm
 
-case class States[S](terminalStates: Iterable[S], nonTerminalStates: Iterable[S]) extends Iterable[S] {
+case class States[S](
+                      terminalStates: Iterable[S],
+                      nonTerminalStates: Iterable[S]
+                    ) extends Iterable[S] {
   override def iterator: Iterator[S] = terminalStates.iterator ++ nonTerminalStates.iterator
 }

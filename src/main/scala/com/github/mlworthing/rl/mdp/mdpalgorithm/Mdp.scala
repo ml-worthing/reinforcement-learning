@@ -41,7 +41,7 @@ object Mdp {
 
     var delta = 0.0
     do {
-      states.foreach { s =>
+      states.nonTerminalStates.foreach { s =>
         val oldV = v(s)
 
         v(s) = Σ(actions(s))((a: A) =>

@@ -24,7 +24,8 @@ import scala.util.Random
 class MdpSpec extends UnitSpec {
 
 
-  "" in {
+  "if you're hungry you should eat" in {
+
     type State = String
     type Action = String
 
@@ -39,7 +40,6 @@ class MdpSpec extends UnitSpec {
     val eatA = "eatA"
     val sitA = "sitA"
 
-
     val mdpDescription = MdpDescription[State, Action](
       states = states,
       actions = {
@@ -51,16 +51,18 @@ class MdpSpec extends UnitSpec {
         case (_, _) => 0.0
       },
       p = {
-        case (`fedS`, 1.0, `hungryS`, `eatA`) => 1.0
+        case (`fedS`,    1.0, `hungryS`, `eatA`) => 0.7
+        case (`hungryS`, 0.0, `hungryS`, `eatA`) => 0.3
+
         case (`hungryS`, 0.0, `hungryS`, `sitA`) => 1.0
-        case (_, _, _, _) => 0.0
+        case (_,         _,    _,         _)     => 0.0
       }
     )
 
     implicit val mdpContext: MdpContext[State, Action] = MdpContext(
       mdpDescription = mdpDescription,
       γ = 0.9,
-      random = new Random(123)
+      random = new Random(125)
     )
 
 

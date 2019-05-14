@@ -52,7 +52,7 @@ class Policy[S, A] private[Policy](πpFactory: MdpDescription[S, A] => Policy.Π
   def apply(s: S): A = greedyAction(s)
 
   def greedyAction(s: S): A = try {
-    argmax(actions(s))(πProbability(s, _))
+    argmax(actions(s))(apply(s, _))
   } catch {
     case e: UnsupportedOperationException if e.getMessage == "empty.maxBy" =>
       throw new UnsupportedOperationException(s"No actions available for state [state=$s]. Is it terminal state?")

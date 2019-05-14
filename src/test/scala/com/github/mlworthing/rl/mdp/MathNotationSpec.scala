@@ -25,14 +25,16 @@ class MathNotationSpec extends FreeSpec with Matchers with AppendedClues {
   "Methods tests" - {
     "sum" in {
 
-      val xs = List(1.0, 2.0, 3.0)
-      val ys = List(10.0, 20.0)
+      val ś = List(1.0, 2.0, 3.0)
+      val r = List(10.0, 20.0)
 
-      Σ(xs)(identity) shouldBe 6.0
-      Σ(xs)(1 + _) shouldBe 9.0
+      Σ(ś)(identity) shouldBe 6.0
+      Σ(ś)(1 + _) shouldBe 9.0
 
-      Σ(xs, ys)(_ + _) shouldBe 102.0
-      Σ(xs, ys)(_ + _) shouldBe xs.flatMap(x => ys.map(x + _)).sum
+      Σ(ś, r)(_ + _) shouldBe 102.0
+      Σ(ś, r)(_ + _) shouldBe ś.flatMap(x => r.map(x + _)).sum
+
+      Σ(ś, r)((x,y)=> x+2.0/y)
     }
 
 
