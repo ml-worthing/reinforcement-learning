@@ -59,18 +59,21 @@ class MdpSpec extends UnitSpec {
       }
     )
 
-    implicit val mdpContext: MdpContext[State, Action] = MdpContext(
-      mdpDescription = mdpDescription,
-      γ = 0.9,
-      random = new Random(125)
-    )
+    (0 to 10000).foreach {iter =>
+
+      implicit val mdpContext: MdpContext[State, Action] = MdpContext(
+        mdpDescription = mdpDescription,
+        γ = 0.9,
+        random = new Random(iter)
+      )
+
+      val policy: Policy[State, Action] = Mdp.iterateValue()
+      val whatToDo: Action = policy(hungryS)
+      whatToDo shouldBe eatA withClue s"[iter=$iter]"
+
+    }
 
 
-    val policy: Policy[State, Action] = Mdp.iterateValue()
-
-    val whatToDo: Action = policy(hungryS)
-
-    whatToDo shouldBe eatA
 
   }
 }
