@@ -90,18 +90,20 @@ object Mdp {
 
     val v: ValueFunction[S] = ValueFunction.createRandomValueFunction[S,A]()
 
-    var delta = 0.0
+    var error = 0.0
     do {
+      error = 0.0
       states.nonTerminalStates.foreach { s =>
         val oldV = v(s)
         v(s) = max_(actions(s))(a =>
           Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś)))
         )
-        delta = max(delta, abs(oldV - v(s)))
+        error += abs(oldV - v(s))
       }
-    } while (delta < theta)
+    } while (error > theta)
 
-    Policy.createPolicy(v)
+    val π = Policy.createPolicy(v)
+    π
   }
 
 

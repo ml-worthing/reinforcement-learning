@@ -17,24 +17,23 @@
 package com.github.mlworthing.rl
 package mdp
 
-import com.github.mlworthing.rl.mdp.mdpalgorithm.{MdpDescription, States}
+import com.github.mlworthing.rl.mdp.mdpalgorithm.{Mdp, MdpContext, MdpDescription, States}
 import com.github.mlworthing.rl.utils.PolicyExecutor
 import org.scalatest.{FreeSpec, Matchers}
+
+import scala.util.Random
 
 class FrozenLakeTest extends FreeSpec with Matchers {
 
   "evaluate a policy for a Frozen Lake" in {
 
     val agent = new AgentSimpleMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
-    val policy = agent.solve(FrozenLake)
+    val policy: Deterministic[Int, String] = agent.solve(FrozenLake)
 
     PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
   }
 
-  "Solve FrozenLake using MDP" in {
-
-    val board: FrozenLake.Board = FrozenLake.board
-
+  "Solve FrozenLake using Mdp" in {
 
     type State = Int
     type Action = String
@@ -51,13 +50,35 @@ class FrozenLakeTest extends FreeSpec with Matchers {
         case s  => Nil
       },
       rewards = {
-        case (s, a) => board(s)(a).map(_._3)
+        case (s, a) => FrozenLake.board(s)(a).map(_._3)
       },
       p = {
-        case (ś, r, s, a) => board(s)(a).find(x => x._1 == ś && x._3 == r).map(_._2).getOrElse(0.0)
+        case (ś, r, s, a) => FrozenLake.board(s)(a).find(x => x._1 == ś && x._3 == r).map(_._2).getOrElse(0.0)
       }
     )
 
+    implicit val c: MdpContext[State, Action] = MdpContext(
+      mdpDescription = mdpDescription,
+      γ = 0.99,
+      random = new Random(125)
+    )
+
+    val π = Mdp.iterateValue(0.00001)
+
+    println(
+      FrozenLake.show(
+      s => Some(π(s)),
+      (_: State, action: Action) => action.toString,
+      cellLength = 1,
+      showForTerminalTiles = false)
+    )
+
+    //TODO: this computes different policies for different randoms, something is still not working
+    //below policy computed by Artur's implementation
+    //← ↑ ↑ ↑
+    //← F → F
+    //↑ ↓ ← F
+    //F → ↓ G
 
   }
 }

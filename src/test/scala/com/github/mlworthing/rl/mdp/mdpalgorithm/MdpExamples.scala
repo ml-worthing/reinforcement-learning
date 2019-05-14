@@ -39,12 +39,9 @@ class MdpExamples extends UnitSpec {
     πBest(state1) shouldBe Up
     πBest(state4) shouldBe Up
     πBest(state7) shouldBe Right
-//    πBest(state8) shouldBe Right //?   TODO, this action shoulb be Right but was Left
-    //This is because ^^ we initialized v to be 0 in terminal states and we never update these states
+    πBest(state8) shouldBe Right
     πBest(state6) shouldBe Up
 
-
-    //TODO: true demo!?
   }
 
 
