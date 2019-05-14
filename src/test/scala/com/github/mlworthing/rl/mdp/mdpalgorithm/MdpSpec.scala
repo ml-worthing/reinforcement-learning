@@ -24,7 +24,7 @@ import scala.util.Random
 class MdpSpec extends UnitSpec {
 
 
-  "if you're hungry you should eat" in {
+  "if you're hungry you should eat" ignore  {
 
     type State = String
     type Action = String
