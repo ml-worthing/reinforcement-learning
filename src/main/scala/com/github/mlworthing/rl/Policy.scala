@@ -53,13 +53,15 @@ case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
     @tailrec
-    def evaluate(s: S, rewardSum: Double, counter: Int): Double = {
-      val observation = environment.send(policy(s))
+    def execute(s: S, rewardSum: Double, counter: Int): Double = {
+      val observation =
+        if (policy.contains(s)) environment.send(policy(s))
+        else environment.Observation(s, 0d, Set.empty, isTerminal = true)
       val newRewardSum = rewardSum + observation.reward
       if (observation.isTerminal || counter > maxIterations) newRewardSum
-      else evaluate(observation.state, newRewardSum, counter + 1)
+      else execute(observation.state, newRewardSum, counter + 1)
     }
-    evaluate(environment.initial._1, 0d, 0)
+    execute(environment.initial._1, 0d, 0)
   }
 }
 
@@ -84,15 +86,15 @@ case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
     @tailrec
-    def evaluate(s: S, rewardSum: Double, counter: Int): Double = {
+    def execute(s: S, rewardSum: Double, counter: Int): Double = {
       val random = Random.nextDouble()
       val actionSet = mapStateToSortedListOfActionsWithUpperBounds(s)
       val action = actionSet.find { case (_, limit) => random <= limit }.getOrElse(actionSet.head)._1
       val observation = environment.send(action)
       val newRewardSum = rewardSum + observation.reward
       if (observation.isTerminal || counter > maxIterations) newRewardSum
-      else evaluate(observation.state, newRewardSum, counter + 1)
+      else execute(observation.state, newRewardSum, counter + 1)
     }
-    evaluate(environment.initial._1, 0d, 0)
+    execute(environment.initial._1, 0d, 0)
   }
 }

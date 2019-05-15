@@ -50,4 +50,10 @@ class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends StatelessEnvironme
   override def description: String =
     s"""The ${arms.size}-armed bandit environment.
        |${arms.map { case (k, (m, r)) => f"arm #$k mean$m%6.1f  range$r%6.1f" }.mkString("\n")}""".stripMargin
+
+  override def show[V](
+    values: Unit => Option[V],
+    format: (Unit, V) => String,
+    cellLength: Int,
+    showForTerminalTiles: Boolean): String = description
 }

@@ -69,11 +69,10 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   @volatile private var currentState: State = initial._1
 
   override def send(action: Action): Observation = {
-    val random = Random.nextDouble()
     val moves = board(currentState)(action)
     val (_, (ns, _, reward)) = moves.tail.foldLeft((moves.head._2, moves.head)) {
       case ((acc, move), newMove) =>
-        (acc + newMove._2, if (random <= acc) move else newMove)
+        (acc + newMove._2, if (Random.nextDouble() <= acc) move else newMove)
     }
     currentState = ns
     Observation(ns, reward, actions, terminalStates.contains(ns))
@@ -122,7 +121,7 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
   override def description: String = layout
 
-  def show[V](
+  override def show[V](
     values: State => Option[V],
     format: (State, V) => String,
     cellLength: Int,

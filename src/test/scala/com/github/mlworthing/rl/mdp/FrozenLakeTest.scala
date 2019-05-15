@@ -25,9 +25,17 @@ import scala.util.Random
 
 class FrozenLakeTest extends FreeSpec with Matchers {
 
-  "evaluate a policy for a Frozen Lake" in {
+  "evaluate a policy for a Frozen Lake using AgentSimpleMDP" in {
 
     val agent = new AgentSimpleMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
+    val policy: Deterministic[Int, String] = agent.solve(FrozenLake)
+
+    PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
+  }
+
+  "evaluate a policy for a Frozen Lake using AgentMDP" in {
+
+    val agent = new AgentMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
     val policy: Deterministic[Int, String] = agent.solve(FrozenLake)
 
     PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
@@ -47,7 +55,7 @@ class FrozenLakeTest extends FreeSpec with Matchers {
       ),
       actions = {
         case s if nonTerminalStates.contains(s) => FrozenLake.actions
-        case s  => Nil
+        case s                                  => Nil
       },
       rewards = {
         case (s, a) => FrozenLake.board(s)(a).map(_._3)
@@ -67,10 +75,10 @@ class FrozenLakeTest extends FreeSpec with Matchers {
 
     println(
       FrozenLake.show(
-      s => Some(π(s)),
-      (_: State, action: Action) => action.toString,
-      cellLength = 1,
-      showForTerminalTiles = false)
+        s => Some(π(s)),
+        (_: State, action: Action) => action.toString,
+        cellLength = 1,
+        showForTerminalTiles = false)
     )
 
     //TODO: this computes different policies for different randoms, something is still not working

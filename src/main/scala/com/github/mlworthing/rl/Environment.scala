@@ -42,6 +42,12 @@ trait Environment[State, Action] {
 
   /** Human-readable environment description */
   def description: String
+
+  def show[V](
+    values: State => Option[V],
+    format: (State, V) => String,
+    cellLength: Int,
+    showForTerminalTiles: Boolean): String
 }
 
 //-------------------------

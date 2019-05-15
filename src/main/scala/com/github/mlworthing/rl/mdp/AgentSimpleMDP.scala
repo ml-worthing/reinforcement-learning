@@ -167,6 +167,6 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
   def difference(m1: StateValue, m2: StateValue): Double =
     m1.map { case (k, v) => v - m2(k) }.toSeq.sum
 
-  def copy(map: StateValue): StateValue = mutable.Map(map.toSeq: _*)
+  def copy[K, V](map: mutable.Map[K, V]): mutable.Map[K, V] = mutable.Map(map.toSeq: _*)
 
 }
