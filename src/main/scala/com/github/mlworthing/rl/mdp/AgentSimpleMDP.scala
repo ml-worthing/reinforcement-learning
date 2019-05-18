@@ -17,13 +17,13 @@
 package com.github.mlworthing.rl
 package mdp
 
-import com.github.mlworthing.rl.utils.BoardEnvironment
+import com.github.mlworthing.rl.utils.{BoardEnvironment, Printer}
 
 import scala.collection.mutable
 import scala.util.Random
 
 class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
-    extends Agent[State, Action, BoardEnvironment[State, Action]] {
+    extends Agent[State, Action, BoardEnvironment[State, Action]] with Printer {
 
   type Reward = Double
   type Probability = Double
@@ -42,16 +42,7 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
         (state, actionsMap.keys.zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
     }
 
-    println(s"Initial random policy:")
-    println()
-    println(
-      environment
-        .show(
-          initialPolicy.get,
-          (_: State, action: Action) => action.toString,
-          cellLength = 1,
-          showForTerminalTiles = false))
-    println()
+    printPolicy(s"Initial random policy:", initialPolicy, environment)
 
     var policy = initialPolicy
     var newPolicy = initialPolicy
@@ -63,26 +54,12 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
 
       val (v, counter) = evaluatePolicy(environment)(policy)
 
-      println(s"State-value function after $counter iterations converged to:")
-      println()
-      println(
-        environment
-          .show(v.get, (_: State, d: Double) => f"$d%+2.4f", cellLength = 10, showForTerminalTiles = true))
-      println()
+      printStateValue(s"State-value function after $counter iterations converged to:", v, environment)
 
       newPolicy = improvePolicy(environment)(v)
       policyCounter = policyCounter + 1
 
-      println(s"Improved policy no. $policyCounter:")
-      println()
-      println(
-        environment
-          .show(
-            newPolicy.get,
-            (_: State, action: Action) => action.toString,
-            cellLength = 1,
-            showForTerminalTiles = false))
-      println()
+      printPolicy(s"Improved policy no. $policyCounter:", newPolicy, environment)
 
     } while (!isStable(policy, newPolicy))
 
@@ -122,7 +99,6 @@ class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, m
         }
 
         delta = Math.abs(difference(old_V, V))
-
       }
 
       counter = counter + 1

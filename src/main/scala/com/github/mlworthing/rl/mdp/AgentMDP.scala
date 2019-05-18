@@ -17,11 +17,13 @@
 package com.github.mlworthing.rl
 package mdp
 
+import com.github.mlworthing.rl.utils.Printer
+
 import scala.collection.mutable
 import scala.util.Random
 
 class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
-    extends Agent[State, Action, Environment[State, Action]] {
+    extends Agent[State, Action, Environment[State, Action]] with Printer {
 
   type Reward = Double
   type Probability = Double
@@ -42,17 +44,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     // incentive to explore
     val incentive = 1d
 
-    println(s"Initial random policy:")
-    println()
-    println(
-      environment
-        .show(
-          initialPolicy.get,
-          (_: State, action: Action) => action.toString,
-          cellLength = 1,
-          showForTerminalTiles = false))
-
-    println()
+    printPolicy(s"Initial random policy:", initialPolicy, environment)
 
     var policy = initialPolicy
     var newPolicy = initialPolicy
@@ -64,28 +56,12 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
 
       val (v, counter) = evaluatePolicy(environment, policy, P, incentive)
 
-      println(s"State-value function after $counter iterations converged to:")
-      println()
-      println(
-        environment
-          .show(v.get, (_: State, d: Double) => f"$d%+2.4f", cellLength = 10, showForTerminalTiles = true))
-      println()
+      printStateValue(s"State-value function after $counter iterations converged to:", v, environment)
 
       newPolicy = improvePolicy(v, policy, P)
       policyCounter = policyCounter + 1
 
-      println(s"Improved policy no. $policyCounter:")
-      println()
-      println(
-        environment
-          .show(
-            newPolicy.get,
-            (_: State, action: Action) => action.toString,
-            cellLength = 1,
-            showForTerminalTiles = false))
-      println()
-      println(P)
-      println()
+      printPolicy(s"Improved policy no. $policyCounter:", newPolicy, environment)
 
     } while (!isStable(policy, newPolicy) && policyCounter < maxIterations)
 
@@ -108,7 +84,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
 
     do {
 
-      val old_V = copy(V).withDefaultValue(incentive)
+      val old_V = copy(V).withDefaultValue(0d)
       // for each possible state
       for (state <- states) {
         // initialize state value to be 0
@@ -150,7 +126,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
           case None    => selectRandom(newActions)
         }
 
-        // shuffle policy if returns to the same state
+        // shuffle policy if returns us to the same state
         if (newState == state || isTerminal) {
           policy(state) = selectRandom(newActions.filterNot(_ == action))
         }
@@ -196,7 +172,9 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
           }
       }
       // select max action in this state
-      newPolicy(state) = Qs.maxBy(_._2)._1
+      val bestAction = Qs.maxBy(_._2)._1
+      newPolicy(state) = bestAction
+      println(state, bestAction, Qs)
     }
 
     newPolicy
