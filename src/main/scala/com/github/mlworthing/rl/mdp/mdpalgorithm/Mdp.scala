@@ -39,8 +39,9 @@ object Mdp {
     import c._
     import mdpDescription._
 
-    var delta = 0.0
+    var error = 0.0
     do {
+      error = 0.0
       states.nonTerminalStates.foreach { s =>
         val oldV = v(s)
 
@@ -48,9 +49,9 @@ object Mdp {
           π(s, a) * Σ(ś(s, a), rewards(s, a))((ś: S, r: R) =>
             p(ś, r, s, a) * (r + γ * v(ś)))
         )
-        delta = max(delta, abs(oldV - v(s)))
+        error += abs(oldV - v(s))
       }
-    } while (delta < theta)
+    } while (error > theta)
   }
 
   /**
@@ -62,23 +63,35 @@ object Mdp {
     import c._
     import mdpDescription._
 
-    var isPolicyStable = true
+    val acceptableError = 0.01
+    var isPolicyStable = false
 
+    def setPolicyStable(old: ImmutablePolicy[S,A], current: ImmutablePolicy[S,A]): Unit = if (old.diff(current) <= acceptableError ) isPolicyStable = true
 
-    def setPolicyStable(oldAction: A, currentAction: A): Unit = if (oldAction == currentAction) isPolicyStable = true
-
-    def improvePolicy(): Unit = states.nonTerminalStates.foreach { s: S =>
-      val oldAction = π.greedyAction(s)
-      π(s) = argmax(actions(s))(a => Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś))))
-      setPolicyStable(oldAction, π.greedyAction(s))
+    def improvePolicy(): Unit = {
+      val oldPolicy = π.asImmutable()
+      (0 to 100).foreach { _ =>
+        states.nonTerminalStates.foreach { s: S =>
+          π(s) = argmax(actions(s))(a => Σ(ś(s, a), rewards(s, a))((ś, r) => p(ś, r, s, a) * (r + γ * v(ś))))
+        }
+      }
+      setPolicyStable(oldPolicy, π.asImmutable())
     }
 
     do {
       evaluatePolicy(v, π)
       improvePolicy()
     } while (!isPolicyStable)
+    ()
   }
 
+  def iteratePolicy[S,A]()(implicit c: MdpContext[S,A]): Policy[S, A] = {
+    val π: Policy[S, A] = Policy.createRandomPolicy()
+    val v: ValueFunction[S] = ValueFunction.createRandomValueFunction[S, A]()
+
+    iteratePolicy(v, π)
+    π
+  }
   /**
     * Value Iteration algorithm for estimating Policy to be the BestPolicy,
     * http://incompleteideas.net/book/RLbook2018trimmed.pdf, page 83

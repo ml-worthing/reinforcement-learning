@@ -19,11 +19,10 @@ package mdp
 
 import com.github.mlworthing.rl.mdp.mdpalgorithm.{Mdp, MdpContext, MdpDescription, States}
 import com.github.mlworthing.rl.utils.PolicyExecutor
-import org.scalatest.{FreeSpec, Matchers}
 
 import scala.util.Random
 
-class FrozenLakeTest extends FreeSpec with Matchers {
+class FrozenLakeTest extends UnitSpec {
 
   "evaluate a policy for a Frozen Lake using AgentSimpleMDP" in {
 
@@ -68,20 +67,32 @@ class FrozenLakeTest extends FreeSpec with Matchers {
     implicit val c: MdpContext[State, Action] = MdpContext(
       mdpDescription = mdpDescription,
       γ = 0.99,
-      random = new Random(125)
+      random = new Random(121)
     )
 
-    val π = Mdp.iterateValue(0.00001)
+    val π1 = Mdp.iteratePolicy()
 
     println(
       FrozenLake.show(
-        s => Some(π(s)),
+        s => Some(π1(s)),
+        (_: State, action: Action) => action.toString,
+        cellLength = 1,
+        showForTerminalTiles = false)
+    )
+
+
+    val π2 = Mdp.iterateValue(0.00001)
+
+    println(
+      FrozenLake.show(
+        s => Some(π2(s)),
         (_: State, action: Action) => action.toString,
         cellLength = 1,
         showForTerminalTiles = false)
     )
 
     //TODO: this computes different policies for different randoms, something is still not working
+
     //below policy computed by Artur's implementation
     //← ↑ ↑ ↑
     //← F → F

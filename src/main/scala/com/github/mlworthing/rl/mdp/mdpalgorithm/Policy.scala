@@ -23,6 +23,14 @@ import com.github.mlworthing.rl.utils.MathNotation._
 
 import scala.collection.mutable
 
+case class ImmutableGreedPolicy[S,A](π: Map[S, A])
+case class ImmutablePolicy[S,A](π: Map[(S,A), P]) {
+  /**
+    * Compares two policies. It returns L1 norm of differences of probabilities
+    */
+  def diff(p: ImmutablePolicy[S,A]): Double = π.foldLeft(0.0)((acc, c) => acc + Math.abs(c._2 - p.π(c._1)))
+}
+
 /**
   * Mutable Policy.
   */
@@ -39,9 +47,26 @@ class Policy[S, A] private[Policy](πpFactory: MdpDescription[S, A] => Policy.Π
     * After update `πProbability(s)` will return `a` and `πProbability(s,a)` will return probability of `1.0`
     * Such syntax available: 'policy(s) = a'
     */
-  def update(s: S, a: A): Unit = {
-    actions(s).foreach(a => πProbability((s, a)) = 0.0)
-    πProbability((s, a)) = 1.0
+//  def update(s: S, a: A): Unit = {
+//    actions(s).foreach(a => πProbability((s, a)) = 0.0)
+//    πProbability((s, a)) = 1.0
+//  }
+
+  /**
+    * Update policy so it promotes action 'a' for a given state 's'.
+    */
+  def update(s: S, a: A, promotionFactor: Double = 1.2): Unit = {
+    val promotionBias: Double = 0.01
+    //increase the chance of (s,a)
+    val x = πProbability(s, a)
+    πProbability((s,a)) = x * promotionFactor + promotionBias
+    normalize(s)
+  }
+
+  //normalise, so they sum up to 1.0 again
+  private def normalize(s: S): Unit = {
+    val pSum = Σ(actions(s))(a => πProbability(s,a))
+    actions(s).foreach (a =>πProbability((s,a)) = πProbability((s,a))/pSum)
   }
 
   /**
@@ -57,6 +82,9 @@ class Policy[S, A] private[Policy](πpFactory: MdpDescription[S, A] => Policy.Π
     case e: UnsupportedOperationException if e.getMessage == "empty.maxBy" =>
       throw new UnsupportedOperationException(s"No actions available for state [state=$s]. Is it terminal state?")
   }
+
+  def asGreedyImmutable(): ImmutableGreedPolicy[S, A] = ImmutableGreedPolicy(states.nonTerminalStates.map(s => s -> greedyAction(s)).toMap)
+  def asImmutable(): ImmutablePolicy[S, A] = ImmutablePolicy[S,A](πProbability.toMap)
 }
 
 
@@ -99,9 +127,15 @@ object Policy {
     policy
   }
 
-  private def createEmptyPolicy[S,A]()(implicit c: MdpContext[S, A]): Policy[S, A] = {
-    new Policy[S, A](_ => mutable.Map[(S, A), P]().withDefaultValue(0.0))
-  }
+  private def createEmptyPolicy[S,A]()(implicit c: MdpContext[S, A]): Policy[S, A] = new Policy[S, A](c =>
+    mutable.Map[(S, A), P](
+      {
+        for {
+          s <- c.states.nonTerminalStates
+          a <- c.actions(s)
+        } yield (s, a) -> 0.0
+      }.toList : _*
+    ))
 
   def createPolicy[S, A](v: ValueFunction[S])(implicit c: MdpContext[S, A]): Policy[S, A] = {
     import c._

@@ -25,16 +25,24 @@ class MdpExamples extends UnitSpec {
     import MdpTestData.GridWorld3x3._
     implicit val c = mdpContext
 
+    //7 8 9
+    //4 5 6
+    //1 2 3
+
     val π: Policy[State, Action] = Policy.createRandomPolicy()
     val v: ValueFunction[State] = ValueFunction.createRandomValueFunction[State, Action]()
     Mdp.evaluatePolicy(v, π)
     Mdp.iteratePolicy(v, π)
 
-    val πBest = Mdp.iterateValue() //todo: test iterateValue
+    π(state2) shouldBe Left
+    π(state1) shouldBe Up
+    π(state4) shouldBe Up
+    π(state7) shouldBe Right
+    π(state8) shouldBe Right
+    π(state6) shouldBe Up
 
-    //7 8 9
-    //4 5 6
-    //1 2 3
+    val πBest = Mdp.iterateValue()
+
     πBest(state2) shouldBe Left
     πBest(state1) shouldBe Up
     πBest(state4) shouldBe Up
