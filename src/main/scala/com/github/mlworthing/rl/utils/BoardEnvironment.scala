@@ -70,9 +70,14 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
   override def send(action: Action): Observation = {
     val moves = board(currentState)(action)
-    val (_, (ns, _, reward)) = moves.tail.foldLeft((moves.head._2, moves.head)) {
-      case ((acc, move), newMove) =>
-        (acc + newMove._2, if (Random.nextDouble() <= acc) move else newMove)
+    val random = Random.nextDouble()
+    val (_, (ns, _, reward)) = {
+      if (moves.isEmpty) (0d, (currentState, 0, 0d))
+      else
+        moves.tail.foldLeft((moves.head._2, moves.head)) {
+          case ((acc, move), newMove) =>
+            (acc + newMove._2, if (random <= acc) move else newMove)
+        }
     }
     currentState = ns
     Observation(ns, reward, actions, terminalStates.contains(ns))

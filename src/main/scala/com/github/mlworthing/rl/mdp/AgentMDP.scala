@@ -31,9 +31,9 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
   type Policy = mutable.Map[State, Action]
   type Knowledge = mutable.Map[State, mutable.Map[Action, Seq[(State, Int, Reward, Boolean)]]]
 
-  override def solve(environment: Environment[State, Action]): Deterministic[State, Action] = {
+  val INCENTIVE_REWARD = 999d
 
-    val P: Knowledge = mutable.Map.empty.withDefaultValue(mutable.Map.empty.withDefaultValue(Seq.empty))
+  override def solve(environment: Environment[State, Action]): Deterministic[State, Action] = {
 
     val (initialState, initialActions) = environment.initial
 
@@ -41,8 +41,10 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     val initialPolicy: Policy =
       mutable.Map(initialState -> selectRandom(initialActions))
 
-    // incentive to explore
-    val incentive = 1d
+    val P: Knowledge = mutable.Map.empty
+    //update P with possible initial state and actions
+    P(initialState) = mutable.Map.empty
+    initialActions.foreach(action => P(initialState)(action) = Seq((initialState, 1, INCENTIVE_REWARD, false)))
 
     printPolicy(s"Initial random policy:", initialPolicy, environment)
 
@@ -54,7 +56,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     do {
       policy = newPolicy
 
-      val (v, counter) = evaluatePolicy(environment, policy, P, incentive)
+      val (v, counter) = evaluatePolicy(environment, policy, P)
 
       printStateValue(s"State-value function after $counter iterations converged to:", v, environment)
 
@@ -68,11 +70,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     Deterministic(newPolicy.toMap)
   }
 
-  def evaluatePolicy(
-    environment: Environment[State, Action],
-    policy: Policy,
-    P: Knowledge,
-    incentive: Double): (StateValue, Int) = {
+  def evaluatePolicy(environment: Environment[State, Action], policy: Policy, P: Knowledge): (StateValue, Int) = {
 
     val states = policy.keys.toSeq
 
@@ -93,37 +91,30 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
         val action = policy(state)
         val environment.Observation(newState, reward, newActions, isTerminal) = environment.send(action)
 
+        println(state, action, newState, reward, isTerminal)
+
         // update knowledge of the current state with the new discovery
-        P(state) = P.get(state) match {
-          case Some(actionMap) =>
-            actionMap(action) = actionMap.get(action) match {
-              case Some(moves) =>
-                moves.find(_._1 == newState) match {
-                  //update information and number of hits for a given move (s,a,ś)
-                  case Some((_, p, _, _)) => moves.filterNot(_._1 == newState) :+ (newState, p + 1, reward, isTerminal)
-                  //add new move (s,a,ś)
-                  case _ => moves :+ (newState, 1, reward, isTerminal)
-                }
-              case _ =>
-                Seq((newState, 1, reward, isTerminal))
+        if (P.contains(state)) {
+          P(state)(action) = {
+            val moves = P(state)(action).filterNot(_._3 == INCENTIVE_REWARD)
+            moves.find(_._1 == newState) match {
+              //update information and number of hits for a given move (s,a,ś)
+              case Some((_, p, _, _)) => moves.filterNot(_._1 == newState) :+ (newState, p + 1, reward, isTerminal)
+              //add new move (s,a,ś)
+              case _ => moves :+ (newState, 1, reward, isTerminal)
             }
-            actionMap
-          case _ =>
-            //add new discovered action result to the knowledge
-            mutable.Map(action -> Seq((newState, 1, reward, isTerminal)))
+          }
         }
 
         //update knowledge of the new state with new possible actions
-        P(newState) = P.get(newState) match {
-          case Some(actionMap) => actionMap
-          case _ =>
-            println(s"New state discovered: $newState")
-            mutable.Map(
-              newActions
-                .map(action =>
-                  action -> (if (isTerminal) Seq((newState, 0, reward, isTerminal))
-                             else Seq((newState, 0, reward, isTerminal))))
-                .toSeq: _*)
+        if (!P.contains(newState)) {
+          println(s"New state discovered: $newState")
+          P(newState) = mutable.Map(
+            newActions
+              .map(action =>
+                action -> (if (isTerminal) Seq.empty
+                           else Seq((newState, 1, INCENTIVE_REWARD, isTerminal))))
+              .toSeq: _*)
         }
 
         // maybe update policy with new state
@@ -174,10 +165,12 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
             // calculate action value function for all actions in this state
             Qs(action) = Qs(action) + probabilityOf(P, state, action, newState) * value
           }
+        } else {
+          Qs(action) = 1d
         }
       }
       // select max action in this state
-      val bestAction = Qs.minBy { case (_, v) => if (v < 0) Int.MaxValue else v }._1
+      val bestAction = Qs.maxBy(_._2)._1
       newPolicy(state) = bestAction
       println(state, bestAction, Qs)
     }
