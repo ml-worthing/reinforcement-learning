@@ -117,7 +117,13 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
         P(newState) = P.get(newState) match {
           case Some(actionMap) => actionMap
           case _ =>
-            mutable.Map(newActions.map(action => action -> Seq.empty).toSeq: _*)
+            println(s"New state discovered: $newState")
+            mutable.Map(
+              newActions
+                .map(action =>
+                  action -> (if (isTerminal) Seq((newState, 0, reward, isTerminal))
+                             else Seq((newState, 0, reward, isTerminal))))
+                .toSeq: _*)
         }
 
         // maybe update policy with new state
@@ -127,9 +133,9 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
         }
 
         // shuffle policy if returns us to the same state
-        if (newState == state || isTerminal) {
+        /*if (newState == state || isTerminal) {
           policy(state) = selectRandom(newActions.filterNot(_ == action))
-        }
+        }*/
 
         val value =
           if (isTerminal) reward
@@ -160,9 +166,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
       // and loop through all actions available
       for (action <- actions) {
         val moves = P(state)(action)
-        if (moves.isEmpty) {
-          Qs(action) = 1d + Random.nextDouble()
-        } else
+        if (moves.nonEmpty) {
           for ((newState, _, reward, isTerminal) <- moves) {
             val value =
               if (isTerminal) reward
@@ -170,9 +174,10 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
             // calculate action value function for all actions in this state
             Qs(action) = Qs(action) + probabilityOf(P, state, action, newState) * value
           }
+        }
       }
       // select max action in this state
-      val bestAction = Qs.maxBy(_._2)._1
+      val bestAction = Qs.minBy { case (_, v) => if (v < 0) Int.MaxValue else v }._1
       newPolicy(state) = bestAction
       println(state, bestAction, Qs)
     }
@@ -184,10 +189,10 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     val moves = P(state)(action)
     val allHits = moves.map(_._2).sum
     val hits = moves.find(_._1 == newState).map(_._2).getOrElse(0)
-    if (allHits == 0) 0d else hits / allHits.toDouble
+    if (allHits == 0) 0 else hits / allHits.toDouble
   }
 
-  def isStable(policy: Policy, newPolicy: Policy): Boolean = policy == newPolicy
+  def isStable(policy: Policy, newPolicy: Policy): Boolean = policy.equals(newPolicy)
 
   def difference(m1: StateValue, m2: StateValue): Double =
     m1.map { case (k, v) => v - m2(k) }.toSeq.sum
