@@ -17,7 +17,7 @@
 package com.github.mlworthing.rl
 package mdp
 
-import utils.{BoardEnvironment, S0FGXFormat, UpRightDownLeft}
+import com.github.mlworthing.rl.environment.{BoardEnvironment, S0FGXFormat, UpRightDownLeft}
 
 object SuperMario extends BoardEnvironment[Int, String] with UpRightDownLeft with S0FGXFormat {
 

@@ -19,6 +19,7 @@ package mdp
 
 import com.github.mlworthing.rl.utils.Printer
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.Random
 
@@ -31,20 +32,11 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
   type Policy = mutable.Map[State, Action]
   type Knowledge = mutable.Map[State, mutable.Map[Action, Seq[(State, Int, Reward, Boolean)]]]
 
-  val INCENTIVE_REWARD = 999d
-
   override def solve(environment: Environment[State, Action]): Deterministic[State, Action] = {
 
-    val (initialState, initialActions) = environment.initial
+    val knowledge: Knowledge = mutable.Map.empty
 
-    // first select random policy
-    val initialPolicy: Policy =
-      mutable.Map(initialState -> selectRandom(initialActions))
-
-    val P: Knowledge = mutable.Map.empty
-    //update P with possible initial state and actions
-    P(initialState) = mutable.Map.empty
-    initialActions.foreach(action => P(initialState)(action) = Seq((initialState, 1, INCENTIVE_REWARD, false)))
+    val initialPolicy = createInitialPolicy(environment, knowledge)
 
     printPolicy(s"Initial random policy:", initialPolicy, environment)
 
@@ -56,11 +48,11 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     do {
       policy = newPolicy
 
-      val (v, counter) = evaluatePolicy(environment, policy, P)
+      val (v, moves, iterations) = evaluatePolicy(environment, policy, knowledge)
 
-      printStateValue(s"State-value function after $counter iterations converged to:", v, environment)
+      printStateValue(s"State-value function converged after $moves moves in $iterations iterations:", v, environment)
 
-      newPolicy = improvePolicy(v, policy, P)
+      newPolicy = improvePolicy(v, policy, knowledge)
       policyCounter = policyCounter + 1
 
       printPolicy(s"Improved policy no. $policyCounter:", newPolicy, environment)
@@ -70,100 +62,111 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     Deterministic(newPolicy.toMap)
   }
 
-  def evaluatePolicy(environment: Environment[State, Action], policy: Policy, P: Knowledge): (StateValue, Int) = {
+  def createInitialPolicy(environment: Environment[State, Action], knowledge: Knowledge): Policy = {
+    val (initialState, initialActions, _) = environment.initial
+    // select random policy at first
+    val initialPolicy: Policy = mutable.Map(initialState -> selectRandom(initialActions))
 
-    val states = policy.keys.toSeq
+    //update knowledge with possible initial state and actions
+    knowledge(initialState) = mutable.Map.empty
+    initialActions.foreach(action => knowledge(initialState)(action) = Seq((initialState, 1, 0d, false)))
+    initialPolicy
+  }
 
-    var delta = 0d
-    var counter = 0
+  def evaluatePolicy(
+    environment: Environment[State, Action],
+    policy: Policy,
+    knowledge: Knowledge): (StateValue, Int, Int) = {
+
+    @tailrec
+    def evaluate(state: State, V: StateValue, old_V: StateValue, frame: environment.Frame, counter: Int): Int = {
+
+      // move following the actual policy
+      val action = policy(state)
+      val (environment.Observation(newState, reward, newActions, isTerminal), nextFrame) =
+        environment.send(action, frame)
+
+      // update knowledge of the current state with the new discovery
+      if (knowledge.contains(state)) {
+        knowledge(state)(action) = {
+          val moves = knowledge(state)(action)
+          moves.find(_._1 == newState) match {
+            //update information and number of hits for a given move (s,a,ś)
+            case Some((_, p, _, _)) => moves.filterNot(_._1 == newState) :+ (newState, p + 1, reward, isTerminal)
+            //add new move (s,a,ś)
+            case _ => moves :+ (newState, 1, reward, isTerminal)
+          }
+        }
+      }
+
+      //update knowledge of the new state with new possible actions
+      if (!knowledge.contains(newState)) {
+        knowledge(newState) = mutable.Map(
+          newActions
+            .map(action =>
+              action -> (if (isTerminal) Seq.empty
+                         else Seq((newState, 1, 0d, isTerminal))))
+            .toSeq: _*)
+      }
+
+      // maybe update policy with a new state
+      policy(newState) = policy.get(newState) match {
+        case Some(a) => a
+        case None    => selectRandom(newActions)
+      }
+
+      val value =
+        if (isTerminal) reward
+        else reward + gamma * old_V(newState)
+
+      V(state) = V(state) + probabilityOf(knowledge, state, action, newState) * value //FIXME
+
+      if (isTerminal || counter >= maxIterations) counter
+      else evaluate(newState, V, old_V, nextFrame, counter + 1)
+    }
+
+    val (initialState, _, initialFrame) = environment.initial
 
     //initialize State-Value function to zero
     val V: StateValue = mutable.Map().withDefaultValue(0d)
 
+    var moves = 0
+    var iterations = 0
+    var delta = 0d
+
     do {
-
       val old_V = copy(V).withDefaultValue(0d)
-      // for each possible state
-      for (state <- states) {
-        // initialize state value to be 0
-        V(state) = 0d
-        // then move following the actual policy
-        val action = policy(state)
-        val environment.Observation(newState, reward, newActions, isTerminal) = environment.send(action)
+      moves = evaluate(initialState, V, old_V, initialFrame, moves)
+      delta = Math.abs(difference(V, old_V))
+      iterations = iterations + 1
+      printPolicy(s"After $moves moves:", policy, environment)
+      println(V)
+      println(delta)
+    } while (delta > theta && iterations < maxIterations)
 
-        println(state, action, newState, reward, isTerminal)
-
-        // update knowledge of the current state with the new discovery
-        if (P.contains(state)) {
-          P(state)(action) = {
-            val moves = P(state)(action).filterNot(_._3 == INCENTIVE_REWARD)
-            moves.find(_._1 == newState) match {
-              //update information and number of hits for a given move (s,a,ś)
-              case Some((_, p, _, _)) => moves.filterNot(_._1 == newState) :+ (newState, p + 1, reward, isTerminal)
-              //add new move (s,a,ś)
-              case _ => moves :+ (newState, 1, reward, isTerminal)
-            }
-          }
-        }
-
-        //update knowledge of the new state with new possible actions
-        if (!P.contains(newState)) {
-          println(s"New state discovered: $newState")
-          P(newState) = mutable.Map(
-            newActions
-              .map(action =>
-                action -> (if (isTerminal) Seq.empty
-                           else Seq((newState, 1, INCENTIVE_REWARD, isTerminal))))
-              .toSeq: _*)
-        }
-
-        // maybe update policy with new state
-        policy(newState) = policy.get(newState) match {
-          case Some(a) => a
-          case None    => selectRandom(newActions)
-        }
-
-        // shuffle policy if returns us to the same state
-        /*if (newState == state || isTerminal) {
-          policy(state) = selectRandom(newActions.filterNot(_ == action))
-        }*/
-
-        val value =
-          if (isTerminal) reward
-          else reward + gamma * old_V(newState)
-
-        V(state) = V(state) + probabilityOf(P, state, action, newState) * value
-
-        delta = Math.abs(difference(old_V, V))
-      }
-
-      counter = counter + 1
-
-    } while (delta > theta && counter < maxIterations)
-
-    (V, counter)
+    (V, moves, iterations)
   }
 
-  def improvePolicy(V: StateValue, policy: Policy, P: Knowledge): Policy = {
+  def improvePolicy(V: StateValue, policy: Policy, knowledge: Knowledge): Policy = {
 
-    val states = P.keys.toSeq
+    val states = knowledge.keys.toSeq
     val newPolicy: Policy = copy(policy)
 
     // for each possible state
     for (state <- states) {
-      val actions = P(state).keys
+      val actions = knowledge(state).keys
       // initialize action value function to zero
       val Qs = mutable.Map(actions.toSeq.map(a => (a, 0d)): _*)
       // and loop through all actions available
       for (action <- actions) {
-        val moves = P(state)(action)
+        val moves = knowledge(state)(action)
         if (moves.nonEmpty) {
           for ((newState, _, reward, isTerminal) <- moves) {
             val value =
               if (isTerminal) reward
               else reward + gamma * V(newState)
             // calculate action value function for all actions in this state
-            Qs(action) = Qs(action) + probabilityOf(P, state, action, newState) * value
+            Qs(action) = Qs(action) + probabilityOf(knowledge, state, action, newState) * value
           }
         } else {
           Qs(action) = 1d
@@ -172,14 +175,13 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
       // select max action in this state
       val bestAction = Qs.maxBy(_._2)._1
       newPolicy(state) = bestAction
-      println(state, bestAction, Qs)
     }
 
     newPolicy
   }
 
-  def probabilityOf(P: Knowledge, state: State, action: Action, newState: State): Probability = {
-    val moves = P(state)(action)
+  def probabilityOf(knowledge: Knowledge, state: State, action: Action, newState: State): Probability = {
+    val moves = knowledge(state)(action)
     val allHits = moves.map(_._2).sum
     val hits = moves.find(_._1 == newState).map(_._2).getOrElse(0)
     if (allHits == 0) 0 else hits / allHits.toDouble

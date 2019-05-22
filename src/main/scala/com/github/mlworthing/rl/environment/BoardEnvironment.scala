@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl
-package utils
+package com.github.mlworthing.rl.environment
+
+import com.github.mlworthing.rl.Environment
 
 import scala.util.Random
 
@@ -25,6 +26,8 @@ import scala.util.Random
   * having known probabilities of success.
   */
 trait BoardEnvironment[State, Action] extends Environment[State, Action] {
+
+  case class Frame(currentState: State)
 
   type Reward = Double
   type Probability = Double
@@ -64,23 +67,23 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   val actions: Set[Action] = actionMoves.keySet
   val (board, initialStates, terminalStates) = parseLayout
 
-  override val initial: (State, Set[Action]) = (initialStates(Random.nextInt(initialStates.size)), actions)
+  override val initial: (State, Set[Action], Frame) = {
+    val state = initialStates(Random.nextInt(initialStates.size))
+    (state, actions, Frame(state))
+  }
 
-  @volatile private var currentState: State = initial._1
-
-  override def send(action: Action): Observation = {
-    val moves = board(currentState)(action)
+  override def send(action: Action, frame: Frame): (Observation, Frame) = {
+    val moves = board(frame.currentState)(action)
     val random = Random.nextDouble()
-    val (_, (ns, _, reward)) = {
-      if (moves.isEmpty) (0d, (currentState, 0, 0d))
+    val (_, (newState, _, reward)) = {
+      if (moves.isEmpty) (0d, (frame.currentState, 0, 0d))
       else
         moves.tail.foldLeft((moves.head._2, moves.head)) {
           case ((acc, move), newMove) =>
             (acc + newMove._2, if (random <= acc) move else newMove)
         }
     }
-    currentState = ns
-    Observation(ns, reward, actions, terminalStates.contains(ns))
+    (Observation(newState, reward, actions, terminalStates.contains(newState)), frame.copy(currentState = newState))
   }
 
   /** Parses square tiles board */
@@ -155,25 +158,4 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
     } else string.take(cellLength)
   }
 
-}
-
-trait UpRightDownLeft {
-
-  lazy val Up = (-1, 0)
-  lazy val Right = (0, 1)
-  lazy val Down = (1, 0)
-  lazy val Left = (0, -1)
-}
-
-trait S0FGXFormat {
-
-  def rewardFor(tile: String): Double = tile match {
-    case "F" => -1
-    case "G" => 1
-    case _   => 0
-  }
-
-  def isAccessible(tile: String): Boolean = tile != "X"
-  def isStart(tile: String): Boolean = tile == "S"
-  def isTerminal(tile: String): Boolean = tile == "F" || tile == "G"
 }

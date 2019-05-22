@@ -17,6 +17,7 @@
 package com.github.mlworthing.rl
 package bandit
 
+import com.github.mlworthing.rl.environment.StatelessEnvironment
 import utils.GaussianRandom
 
 /**

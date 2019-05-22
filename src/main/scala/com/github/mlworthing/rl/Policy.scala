@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl
+package com.github.mlworthing
+package rl
 
 import scala.annotation.tailrec
 import scala.util.Random
@@ -37,31 +38,40 @@ trait Policy[State, Action] {
 /** The best single action to take */
 case class Winner[A](action: A) extends Policy[Unit, A] {
 
-  override def execute(environment: Environment[Unit, A], maxIterations: Int): Double =
-    environment.send(action).reward
+  override def execute(environment: Environment[Unit, A], maxIterations: Int): Double = {
+    val (_, _, frame) = environment.initial
+    environment.send(action, frame).first.reward
+  }
 }
 
 /** The best plan, sequence of actions to take */
 case class Trajectory[S, A](actions: Seq[A]) extends Policy[S, A] {
 
-  override def execute(environment: Environment[S, A], maxIterations: Int): Double =
-    actions.foldLeft(0d)((s, a) => s + environment.send(a).reward)
+  override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
+    val (_, _, frame) = environment.initial
+    actions
+      .foldLeft((0d, frame)) {
+        case ((acc, frame), action) => environment.send(action, frame).map_1(_.reward + acc)
+      }
+      .first
+  }
 }
 
 /** The best action to take given the current state */
 case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
+    val (_, _, initialFrame) = environment.initial
     @tailrec
-    def execute(s: S, rewardSum: Double, counter: Int): Double = {
-      val observation =
-        if (policy.contains(s)) environment.send(policy(s))
-        else environment.Observation(s, 0d, Set.empty, isTerminal = true)
+    def execute(state: S, rewardSum: Double, counter: Int, frame: environment.Frame): Double = {
+      val (observation, nextFrame) =
+        if (policy.contains(state)) environment.send(policy(state), frame)
+        else (environment.Observation(state, 0d, Set.empty, isTerminal = true), frame)
       val newRewardSum = rewardSum + observation.reward
       if (observation.isTerminal || counter > maxIterations) newRewardSum
-      else execute(observation.state, newRewardSum, counter + 1)
+      else execute(observation.state, newRewardSum, counter + 1, nextFrame)
     }
-    execute(environment.initial._1, 0d, 0)
+    execute(environment.initial._1, 0d, 0, initialFrame)
   }
 }
 
@@ -85,16 +95,17 @@ case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[
   }
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
+    val (_, _, initialFrame) = environment.initial
     @tailrec
-    def execute(s: S, rewardSum: Double, counter: Int): Double = {
+    def execute(s: S, rewardSum: Double, counter: Int, frame: environment.Frame): Double = {
       val random = Random.nextDouble()
       val actionSet = mapStateToSortedListOfActionsWithUpperBounds(s)
       val action = actionSet.find { case (_, limit) => random <= limit }.getOrElse(actionSet.head)._1
-      val observation = environment.send(action)
+      val (observation, nextFrame) = environment.send(action, frame)
       val newRewardSum = rewardSum + observation.reward
       if (observation.isTerminal || counter > maxIterations) newRewardSum
-      else execute(observation.state, newRewardSum, counter + 1)
+      else execute(observation.state, newRewardSum, counter + 1, nextFrame)
     }
-    execute(environment.initial._1, 0d, 0)
+    execute(environment.initial._1, 0d, 0, initialFrame)
   }
 }

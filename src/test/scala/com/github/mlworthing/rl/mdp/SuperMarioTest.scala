@@ -21,7 +21,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 class SuperMarioTest extends FreeSpec with Matchers {
 
-  "evaluate a policy for a Super Mario" in {
+  "evaluate a policy for a Super Mario using AgentSimpleMDP" in {
 
     val agent = new AgentSimpleMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
     val policy = agent.solve(SuperMario)

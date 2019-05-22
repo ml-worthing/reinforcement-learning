@@ -25,20 +25,24 @@ package com.github.mlworthing.rl
   */
 trait Environment[State, Action] {
 
+  /** Frame of reference, an opaque internal state of an environment */
+  type Frame
+
   case class Observation(state: State, reward: Double, actions: Set[Action], isTerminal: Boolean)
 
-  /** Some initial state and corresponding actions */
-  def initial: (State, Set[Action])
+  /** Some initial state, corresponding set of actions and an initial frame */
+  def initial: (State, Set[Action], Frame)
 
   /**
     * The primary way for an Agent to interact with an Environment.
-    * Agent sends an action and receives an observation:
+    * Agent sends an action with a current frame and receives an observation and a next frame:
+    * The observation tels you:
     * - state after an action
     * - reward gained for this action
     * - set of the next possible actions (can be static or dynamic)
     * - is the state terminal or not?
     */
-  def send(action: Action): Observation
+  def send(action: Action, frame: Frame): (Observation, Frame)
 
   /** Human-readable environment description */
   def description: String
@@ -48,23 +52,4 @@ trait Environment[State, Action] {
     format: (State, V) => String,
     cellLength: Int,
     showForTerminalTiles: Boolean): String
-}
-
-//-------------------------
-// COMMON ENVIRONMENT TYPES
-//-------------------------
-
-/**
-  * Infinite stateless, non-terminal
-  * environment with static set of actions.
-  */
-trait StatelessEnvironment[Action] extends Environment[Unit, Action] {
-
-  val actions: Set[Action]
-  def reward(action: Action): Double
-
-  final override def initial: (Unit, Set[Action]) = ((), actions)
-  final override def send(action: Action): Observation =
-    Observation((), reward(action), actions, isTerminal = false)
-
 }

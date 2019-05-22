@@ -17,7 +17,7 @@
 package com.github.mlworthing.rl
 package mdp
 
-import utils.{BoardEnvironment, S0FGXFormat, UpRightDownLeft}
+import com.github.mlworthing.rl.environment.{BoardEnvironment, S0FGXFormat, UpRightDownLeft}
 
 /**
   * The Frozen Lake environment as described in the book

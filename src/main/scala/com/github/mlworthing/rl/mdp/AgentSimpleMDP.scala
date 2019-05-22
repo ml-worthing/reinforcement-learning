@@ -17,7 +17,8 @@
 package com.github.mlworthing.rl
 package mdp
 
-import com.github.mlworthing.rl.utils.{BoardEnvironment, Printer}
+import com.github.mlworthing.rl.environment.BoardEnvironment
+import com.github.mlworthing.rl.utils.Printer
 
 import scala.collection.mutable
 import scala.util.Random
