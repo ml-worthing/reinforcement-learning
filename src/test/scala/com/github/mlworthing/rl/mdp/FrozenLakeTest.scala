@@ -17,10 +17,8 @@
 package com.github.mlworthing.rl
 package mdp
 
-import com.github.mlworthing.rl.mdp.mdpalgorithm.{Mdp, MdpContext, MdpDescription, States}
 import com.github.mlworthing.rl.utils.PolicyExecutor
-
-import scala.util.Random
+import com.github.mlworthing.rlai.utils.UnitSpec
 
 class FrozenLakeTest extends UnitSpec {
 
@@ -38,66 +36,5 @@ class FrozenLakeTest extends UnitSpec {
     val policy: Deterministic[Int, String] = agent.solve(FrozenLake)
 
     PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
-  }
-
-  "Solve FrozenLake using Mdp" in {
-
-    type State = Int
-    type Action = String
-
-    val nonTerminalStates: Set[State] = FrozenLake.board.keySet diff FrozenLake.terminalStates.toSet
-
-    val mdpDescription = MdpDescription[State, Action](
-      states = States(
-        terminalStates = FrozenLake.terminalStates,
-        nonTerminalStates = nonTerminalStates
-      ),
-      actions = {
-        case s if nonTerminalStates.contains(s) => FrozenLake.actions
-        case s                                  => Nil
-      },
-      rewards = {
-        case (s, a) => FrozenLake.board(s)(a).map(_._3)
-      },
-      p = {
-        case (ś, r, s, a) => FrozenLake.board(s)(a).find(x => x._1 == ś && x._3 == r).map(_._2).getOrElse(0.0)
-      }
-    )
-
-    implicit val c: MdpContext[State, Action] = MdpContext(
-      mdpDescription = mdpDescription,
-      γ = 0.99,
-      random = new Random(121)
-    )
-
-    val π1 = Mdp.iteratePolicy()
-
-    println(
-      FrozenLake.show(
-        s => Some(π1(s)),
-        (_: State, action: Action) => action.toString,
-        cellLength = 1,
-        showForTerminalTiles = false)
-    )
-
-
-    val π2 = Mdp.iterateValue(0.00001)
-
-    println(
-      FrozenLake.show(
-        s => Some(π2(s)),
-        (_: State, action: Action) => action.toString,
-        cellLength = 1,
-        showForTerminalTiles = false)
-    )
-
-    //TODO: this computes different policies for different randoms, something is still not working
-
-    //below policy computed by Artur's implementation
-    //← ↑ ↑ ↑
-    //← F → F
-    //↑ ↓ ← F
-    //F → ↓ G
-
   }
 }

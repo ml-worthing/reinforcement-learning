@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp.mdpalgorithm
+package com.github.mlworthing.rlai
 
-import com.github.mlworthing.rl.utils.MathNotation._
+import com.github.mlworthing.rlai.utils.MathNotation._
 
 /**
   * This is the description of problem which can be solved using MDP (Markov Decision Process)

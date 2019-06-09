@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp.mdpalgorithm
+package com.github.mlworthing.rlai
 
 import java.lang.Math._
 
-import com.github.mlworthing.rl.utils.MathNotation._
+import com.github.mlworthing.rlai.utils.MathNotation._
 
 
 /**

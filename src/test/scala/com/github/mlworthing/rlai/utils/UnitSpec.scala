@@ -14,27 +14,21 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp
+package com.github.mlworthing.rlai.utils
 
-package object mdpalgorithm {
+import org.scalatest._
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 
-  /**
-    * Reward
-    */
-  type R = Double
-
-  /**
-    * Probability, a number from [0,1] range
-    */
-  type P = Double
-
-  /**
-    * Actions for given S,A
-    */
-  type Actions[S, A] = S => Iterable[A]
-
-  /**
-    * Rewards for given (state,action) pair
-    */
-  type Rewards[S, A, R] = (S, A) => Iterable[R]
-}
+trait UnitSpec
+  extends FreeSpecLike
+    with Matchers
+    with DiagrammedAssertions
+    with TryValues
+    with EitherValues
+    with OptionValues
+    with AppendedClues
+    with ScalaFutures
+    with StreamlinedXml
+    with Inside
+    with Eventually
+    with IntegrationPatience

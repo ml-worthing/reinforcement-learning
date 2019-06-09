@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp.mdpalgorithm
+package com.github.mlworthing.rlai
 
-import com.github.mlworthing.rl.UnitSpec
 import com.github.mlworthing.rl.utils.ToSeq._
+import com.github.mlworthing.rlai.utils.UnitSpec
 
 import scala.util.Random
 

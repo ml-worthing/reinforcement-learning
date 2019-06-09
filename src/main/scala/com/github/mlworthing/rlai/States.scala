@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp.mdpalgorithm
+package com.github.mlworthing.rlai
 
 case class States[S](
                       terminalStates: Iterable[S],

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.utils
+package com.github.mlworthing.rlai.utils
 
 object MathNotation {
 

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp.mdpalgorithm
+package com.github.mlworthing.rlai
 
 import java.lang.Math.abs
 
-import com.github.mlworthing.rl.mdp.mdpalgorithm.Policy.ΠProbability
-import com.github.mlworthing.rl.utils.MathNotation._
+import com.github.mlworthing.rlai.Policy.ΠProbability
+import com.github.mlworthing.rlai.utils.MathNotation._
 
 import scala.collection.mutable
 

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp.mdpalgorithm
+package com.github.mlworthing.rlai
 
-import com.github.mlworthing.rl.UnitSpec
+import com.github.mlworthing.rlai.utils.UnitSpec
 
 class PolicySpec extends UnitSpec {
 
   "random policy" in {
 
-    import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpTestData.GridWorld3x3._
+    import com.github.mlworthing.rlai.MdpTestData.GridWorld3x3._
     implicit val c = mdpContext
 
     val randomπ: Policy[State, Action] = Policy.createRandomPolicy()
@@ -43,7 +43,7 @@ class PolicySpec extends UnitSpec {
   }
 
   "update policy" in {
-    import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpTestData.GridWorld3x3._
+    import com.github.mlworthing.rlai.MdpTestData.GridWorld3x3._
     implicit val c = mdpContext
 
     val π: Policy[State, Action] = Policy.createRandomPolicy()
@@ -150,7 +150,7 @@ class PolicySpec extends UnitSpec {
   }
 
   "update policy should converge" in {
-    import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpTestData.GridWorld3x3._
+    import com.github.mlworthing.rlai.MdpTestData.GridWorld3x3._
     implicit val c = mdpContext
 
     val π: Policy[State, Action] = Policy.createRandomPolicy()

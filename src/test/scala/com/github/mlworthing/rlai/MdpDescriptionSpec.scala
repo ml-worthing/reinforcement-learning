@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp.mdpalgorithm
+package com.github.mlworthing.rlai
 
-import com.github.mlworthing.rl.UnitSpec
-import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpTestData.GridWorld3x3
+import com.github.mlworthing.rlai.MdpTestData.GridWorld3x3
+import com.github.mlworthing.rlai.utils.UnitSpec
 
 class MdpDescriptionSpec extends UnitSpec {
 

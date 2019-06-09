@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.mdp
+package com.github.mlworthing.rlai.utils
 
-import com.github.mlworthing.rl.mdp.mdpalgorithm.MdpDescription
-import org.scalatest.{AppendedClues, FreeSpec, Matchers}
-import com.github.mlworthing.rl.utils.MathNotation._
+import com.github.mlworthing.rlai.utils.MathNotation._
 
-class MathNotationSpec extends FreeSpec with Matchers with AppendedClues {
+class MathNotationSpec extends UnitSpec {
 
   "Methods tests" - {
     "sum" in {
