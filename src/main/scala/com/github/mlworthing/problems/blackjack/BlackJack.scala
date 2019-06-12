@@ -28,42 +28,66 @@ sealed trait BlackJackResult
 case object PlayerWon extends BlackJackResult
 case object DealerWon extends BlackJackResult
 case object Tie extends BlackJackResult
+case object InProgress extends BlackJackResult
 
+case class BjGameState(
+                      dealersCards: List[Card],
+                      dealersValue: Int,
+                      playersCards: List[Card],
+                      playersValue: Int,
+                      result: BlackJackResult
+                    )
 /**
   * Simplified BlackJack game.
   * One player only and player has only two actions.
   * Dealers hits if his value is <= 16
   */
-class BlackJack(random: Random) {
+class BlackJack(random: Random = new Random()) {
 
   type PlayersValue = Int
   type DealersValue = Int
+  type DealersCards = List[Card]
+  type PlayersCards = List[Card]
 
   /**
     * Start Game. Resets all states, shuffles new deck.
     */
-  def start(): (DealersValue, PlayersValue) = {
+  def start(): BjGameState = {
     dealer.start()
     player.start()
     deck = mutable.Queue(Cards.shuffledDeck(random): _*)
     dealer.drawCard()
     player.drawCard()
     player.drawCard()
-    (dealer.value(), player.value())
+    BjGameState(
+      dealer.onHand(),
+      dealer.value(),
+      player.onHand(),
+      player.value(),
+      InProgress
+    )
   }
 
   /**
     * Players action.
     */
-  def hit(): PlayersValue = {
+  def hit(): BjGameState  = {
     player.drawCard()
-    player.value()
+
+    if(player.value() >= 21) stay()
+    else BjGameState(
+      dealer.onHand(),
+      dealer.value(),
+      player.onHand(),
+      player.value(),
+      InProgress
+    )
   }
 
   /**
     * Players action. This as well finishes game. The function returns final Game Result.
     */
-  def stay(): (BlackJackResult, DealersValue, PlayersValue) = {
+  def stay(): BjGameState = {
     dealerMove()
     val result =
       if
@@ -76,7 +100,13 @@ class BlackJack(random: Random) {
       /*(dealer.value() <= 21 && player.value() <= 21) */
         if(dealer.value() > player.value()) DealerWon else PlayerWon
 
-    (result, dealer.value(), player.value())
+    BjGameState(
+      dealer.onHand(),
+      dealer.value(),
+      player.onHand(),
+      player.value(),
+      result
+    )
   }
 
   private def dealerMove(): Unit = {
@@ -91,15 +121,16 @@ class BlackJack(random: Random) {
   private val dealer = new GameParticipant
 
   private class GameParticipant {
-    private val onHand: ListBuffer[Card] = ListBuffer[Card]()
+    private val _onHand: ListBuffer[Card] = ListBuffer[Card]()
     private var _value: Int = 0
     def start() = {
-      onHand.clear()
+      _onHand.clear()
       _value = 0
     }
+    def onHand(): List[Card] = _onHand.toList
     def drawCard(): Unit = {
-      onHand += deck.dequeue()
-      _value = BlackJack.value(onHand)
+      _onHand += deck.dequeue()
+      _value = BlackJack.value(_onHand)
     }
     @inline def value(): Int = _value
     def isBust(): Boolean = _value > 21
