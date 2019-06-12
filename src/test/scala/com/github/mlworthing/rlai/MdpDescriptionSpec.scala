@@ -41,15 +41,15 @@ class MdpDescriptionSpec extends UnitSpec {
       (state8, Right) -> state9Terminal
     )
 
-    mdpDescription.ś shouldBe expectedDestinations
+    mdpContext.ś shouldBe expectedDestinations
   }
 
   "transition probabilities " in {
 
     import GridWorld3x3._
 
-    mdpDescription.transitionP(state1, state1, Up) shouldBe 0.0
-    mdpDescription.transitionP(state2, state1, Up) shouldBe 0.0
+    mdpContext.transitionP(state1, state1, Up) shouldBe 0.0
+    mdpContext.transitionP(state2, state1, Up) shouldBe 0.0
     //... TODO: finish it
   }
 

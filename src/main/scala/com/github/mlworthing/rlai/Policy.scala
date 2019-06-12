@@ -20,6 +20,7 @@ import java.lang.Math.abs
 
 import com.github.mlworthing.rlai.Policy.ΠProbability
 import com.github.mlworthing.rlai.utils.MathNotation._
+import com.github.mlworthing.rlai.utils.Selector
 
 import scala.collection.mutable
 
@@ -34,11 +35,11 @@ case class ImmutablePolicy[S,A](π: Map[(S,A), P]) {
 /**
   * Mutable Policy.
   */
-class Policy[S, A] private[Policy](πpFactory: MdpDescription[S, A] => Policy.ΠProbability[S, A])(implicit c: MdpContext[S, A]) {
+class Policy[S, A] private[Policy](πpFactory: StatesAndActions[S, A] => Policy.ΠProbability[S, A])(implicit context: StatesAndActions[S, A] with Randomness) {
 
-  import c.mdpDescription._
+  import context._
 
-  private val πProbability: ΠProbability[S, A] = πpFactory(c.mdpDescription).withDefault(sa =>
+  private val πProbability: ΠProbability[S, A] = πpFactory(context).withDefault(sa =>
     throw new UnsupportedOperationException(s"In state [${sa._1}] an action [${sa._2}] is not valid")
   )
 
@@ -75,6 +76,13 @@ class Policy[S, A] private[Policy](πpFactory: MdpDescription[S, A] => Policy.Π
   def apply(s: S, a: A): P = πProbability((s, a))
 
   def apply(s: S): A = greedyAction(s)
+
+  def selectActionAccordingToProbability(s: S): A =  {
+    val actions: IndexedSeq[A] = context.actions(s)
+    val probabilities: Iterable[P] = actions.map(a => πProbability(s,a))
+    val selectedIndex = Selector.selectDouble(probabilities)
+    actions(selectedIndex)
+  }
 
   def greedyAction(s: S): A = try {
     argmax(actions(s))(apply(s, _))
@@ -139,7 +147,6 @@ object Policy {
 
   def createPolicy[S, A](v: ValueFunction[S])(implicit c: MdpContext[S, A]): Policy[S, A] = {
     import c._
-    import mdpDescription._
     val π = createEmptyPolicy()
 
     //update π so it returns action according to v

@@ -31,10 +31,12 @@ package object rlai {
   /**
     * Actions for given S,A
     */
-  type Actions[S, A] = S => Iterable[A]
+  type Actions[S, A] = S => IndexedSeq[A]
 
   /**
     * Rewards for given (state,action) pair
     */
   type Rewards[S, A, R] = (S, A) => Iterable[R]
+
+  def reverseRange[T](iterable: Iterable[T]): Range = iterable.size - 1 to 0 by -1
 }

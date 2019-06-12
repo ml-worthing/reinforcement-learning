@@ -32,7 +32,7 @@ class MdpSpec extends UnitSpec {
     val hungryS = "hungryS"
     val fedS = "fedS"
 
-    val states: States[State] = States[State](
+    val states : States[State] = States[State](
       terminalStates = fedS,
       nonTerminalStates = hungryS
     )
@@ -40,11 +40,11 @@ class MdpSpec extends UnitSpec {
     val eatA = "eatA"
     val sitA = "sitA"
 
-    val mdpDescription = MdpDescription[State, Action](
+    def mdpContextF(seed: Int) = MdpContext[State, Action](
       states = states,
       actions = {
-        case `hungryS` => List(eatA, sitA)
-        case `fedS` => List()
+        case `hungryS` => Array(eatA, sitA)
+        case `fedS` => Array[Action]()
       },
       rewards = {
         case (`hungryS`, `eatA`) => 1.0
@@ -56,21 +56,18 @@ class MdpSpec extends UnitSpec {
 
         case (`hungryS`, 0.0, `hungryS`, `sitA`) => 1.0
         case (_,         _,    _,         _)     => 0.0
-      }
+      },
+      γ = 0.9,
+      random = new Random(seed)
     )
 
     (0 to 10000).foreach {iter =>
 
-      implicit val mdpContext: MdpContext[State, Action] = MdpContext(
-        mdpDescription = mdpDescription,
-        γ = 0.9,
-        random = new Random(iter)
-      )
+      implicit val mdpContext: MdpContext[State, Action] = mdpContextF(iter)
 
       val policy: Policy[State, Action] = Mdp.iterateValue()
       val whatToDo: Action = policy(hungryS)
       whatToDo shouldBe eatA withClue s"[iter=$iter]"
-
     }
 
 

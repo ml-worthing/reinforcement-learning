@@ -18,6 +18,9 @@ package com.github.mlworthing.rlai
 
 import scala.collection.mutable
 
+/**
+  * Mutable Value Function.
+  */
 class ValueFunction[S](private[ValueFunction] val v: mutable.Map[S, R]) extends (S => R) {
 
   override def apply(s: S): R = v(s)
@@ -51,7 +54,7 @@ object ValueFunction {
     * for non-terminal states
     */
   def createValueFunction[S, A](initializer: S => R)(implicit c: MdpContext[S, A]): ValueFunction[S] = {
-    import c.mdpDescription._
+    import c._
     val vBuilder = mutable.Map.newBuilder[S, P]
     vBuilder ++= states.terminalStates.map(s => (s, 0.0))
     vBuilder ++= states.nonTerminalStates.map(s => (s, initializer(s)))

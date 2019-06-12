@@ -45,16 +45,17 @@ object MdpTestData {
       terminalStates = List(state3Terminal,state9Terminal),
       nonTerminalStates = List(state1,state2,state4,state6,state7,state8)
     )
-    val mdpDescription: MdpDescription[State, Action] = MdpDescription[State, Action](
+
+    def mdpContext: MdpContext[State, Action] = MdpContext[State, Action](
       states = states,
       actions = {
-        case `state1` => List(Up, Right)
-        case `state2` => List(Left, Right)
-        case `state4` => List(Up, Down)
-        case `state6` => List(Up, Down)
-        case `state7` => List(Right, Down)
-        case `state8` => List(Left, Right)
-        case _ => Nil
+        case `state1` => Array(Up, Right)
+        case `state2` => Array(Left, Right)
+        case `state4` => Array(Up, Down)
+        case `state6` => Array(Up, Down)
+        case `state7` => Array(Right, Down)
+        case `state8` => Array(Left, Right)
+        case _ => Array.empty[Action]
       },
       rewards = {
         case (`state2`, Right) => -1.0
@@ -79,9 +80,6 @@ object MdpTestData {
         case _ => 0.0
       }
     )
-
-    //def because it creates random and you don't wan't to reuse the same random in many tests
-    def mdpContext: MdpContext[State, Action] = MdpContext(mdpDescription)
   }
 
 

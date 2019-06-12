@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rlai
+package com.github.mlworthing.rlai.utils
 
-case class States[S](
-                      terminalStates: Iterable[S],
-                      nonTerminalStates: Iterable[S]
-                    ) extends Iterable[S] {
-  def isTerminalState(s: S): Boolean = terminalStates.exists(_ == s)
+object Cartesian {
 
-  override def iterator: Iterator[S] = terminalStates.iterator ++ nonTerminalStates.iterator
+  private def cart[T](acc: List[List[T]], x: List[T]): List[List[T]] = for {
+    x <- x
+    acc <- acc
+  } yield x :: acc
+
+
+  /**
+    * Inefficient cartesian.
+    */
+  def cartesian[T](l: Iterable[List[T]]): Iterable[List[T]] = l.foldLeft(List(List[T]()))(cart)
+
 }

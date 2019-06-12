@@ -37,7 +37,6 @@ object Mdp {
                            theta: Double = 0.01 //acceptable error
                           )(implicit c: MdpContext[S, A]): Unit = {
     import c._
-    import mdpDescription._
 
     var error = 0.0
     do {
@@ -61,7 +60,6 @@ object Mdp {
                           π: Policy[S, A]
                          )(implicit c: MdpContext[S, A]): Unit = {
     import c._
-    import mdpDescription._
 
     val acceptableError = 0.01
     var isPolicyStable = false
@@ -99,7 +97,6 @@ object Mdp {
   def iterateValue[S, A](theta: Double = 0.01 //acceptable error
                         )(implicit c: MdpContext[S, A]): Policy[S, A] = {
     import c._
-    import mdpDescription._
 
     val v: ValueFunction[S] = ValueFunction.createRandomValueFunction[S,A]()
 

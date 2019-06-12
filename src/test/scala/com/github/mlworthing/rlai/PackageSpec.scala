@@ -16,11 +16,25 @@
 
 package com.github.mlworthing.rlai
 
-case class States[S](
-                      terminalStates: Iterable[S],
-                      nonTerminalStates: Iterable[S]
-                    ) extends Iterable[S] {
-  def isTerminalState(s: S): Boolean = terminalStates.exists(_ == s)
+import com.github.mlworthing.rlai.utils.UnitSpec
 
-  override def iterator: Iterator[S] = terminalStates.iterator ++ nonTerminalStates.iterator
+class PackageSpec extends UnitSpec {
+
+
+  "reverseRange" in {
+
+    reverseRange(List(1,2,3)) shouldBe (2 to 0 by -1)
+    reverseRange(List(0)) shouldBe (0 to 0 by -1)
+    reverseRange(List()) shouldBe (-1 to 0 by -1)
+
+    //example use case
+    val a: Array[Char] = "boom".toArray
+    val x = for {
+      i <- reverseRange(a) //iterates over index
+    } yield a(i)
+
+    x.mkString shouldBe "moob"
+
+  }
+
 }

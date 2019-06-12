@@ -16,11 +16,24 @@
 
 package com.github.mlworthing.rlai
 
-case class States[S](
-                      terminalStates: Iterable[S],
-                      nonTerminalStates: Iterable[S]
-                    ) extends Iterable[S] {
-  def isTerminalState(s: S): Boolean = terminalStates.exists(_ == s)
+//TODO: some better name for it?
+trait StatesAndActions[S, A] {
 
-  override def iterator: Iterator[S] = terminalStates.iterator ++ nonTerminalStates.iterator
+  def states: States[S]
+
+  def actions: Actions[S, A]
+
+  states.nonTerminalStates.foreach(s =>
+    require(
+      actions(s).nonEmpty,
+      s"Non terminal states should have at least one action available. State [state=$s] has no available actions"
+    )
+  )
+
+  states.terminalStates.foreach(s =>
+    require(
+      actions(s).isEmpty,
+      s"Terminal states should not have any actions available. State [state=$s] had actions [${actions(s).mkString(",")}]"
+    )
+  )
 }
