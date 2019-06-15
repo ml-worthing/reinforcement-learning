@@ -79,12 +79,12 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
     knowledge: Knowledge): (StateValue, Int, Int) = {
 
     @tailrec
-    def evaluate(state: State, V: StateValue, old_V: StateValue, frame: environment.Frame, counter: Int): Int = {
+    def evaluate(state: State, V: StateValue, old_V: StateValue, episode: environment.Episode, counter: Int): Int = {
 
       // move following the actual policy
       val action = policy(state)
-      val (environment.Observation(newState, reward, newActions, isTerminal), nextFrame) =
-        environment.send(action, frame)
+      val (environment.Observation(newState, reward, newActions, isTerminal), nextEpisode) =
+        environment.step(action, episode)
 
       // update knowledge of the current state with the new discovery
       if (knowledge.contains(state)) {
@@ -122,10 +122,10 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
       V(state) = V(state) + probabilityOf(knowledge, state, action, newState) * value //FIXME
 
       if (isTerminal || counter >= maxIterations) counter
-      else evaluate(newState, V, old_V, nextFrame, counter + 1)
+      else evaluate(newState, V, old_V, nextEpisode, counter + 1)
     }
 
-    val (initialState, _, initialFrame) = environment.initial
+    val (initialState, _, initialEpisode) = environment.initial
 
     //initialize State-Value function to zero
     val V: StateValue = mutable.Map().withDefaultValue(0d)
@@ -136,7 +136,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
 
     do {
       val old_V = copy(V).withDefaultValue(0d)
-      moves = evaluate(initialState, V, old_V, initialFrame, moves)
+      moves = evaluate(initialState, V, old_V, initialEpisode, moves)
       delta = Math.abs(difference(V, old_V))
       iterations = iterations + 1
       printPolicy(s"After $moves moves:", policy, environment)

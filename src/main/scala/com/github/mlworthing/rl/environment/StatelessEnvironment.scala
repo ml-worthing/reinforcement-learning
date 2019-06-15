@@ -24,13 +24,13 @@ import com.github.mlworthing.rl.Environment
   */
 trait StatelessEnvironment[Action] extends Environment[Unit, Action] {
 
-  type Frame = Unit
+  type Episode = Unit
 
   val actions: Set[Action]
   def reward(action: Action): Double
 
   final override def initial: (Unit, Set[Action], Unit) = ((), actions, ())
-  final override def send(action: Action, frame: Frame): (Observation, Frame) =
+  final override def step(action: Action, episode: Episode): (Observation, Episode) =
     (Observation((), reward(action), actions, isTerminal = false), ())
 
 }

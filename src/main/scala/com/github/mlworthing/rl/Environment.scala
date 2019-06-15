@@ -25,24 +25,27 @@ package com.github.mlworthing.rl
   */
 trait Environment[State, Action] {
 
-  /** Frame of reference, an opaque internal state of an environment */
-  type Frame
+  /** Episode reference, an opaque internal state of an environment */
+  type Episode
 
   case class Observation(state: State, reward: Double, actions: Set[Action], isTerminal: Boolean)
 
-  /** Some initial state, corresponding set of actions and an initial frame */
-  def initial: (State, Set[Action], Frame)
+  /** Some initial state, corresponding set of actions and an initial episode */
+  def initial: (State, Set[Action], Episode)
 
   /**
     * The primary way for an Agent to interact with an Environment.
-    * Agent sends an action with a current frame and receives an observation and a next frame:
-    * The observation tels you:
+    *
+    * Agent steps into an action with a current episode
+    * and receives back an observation and a next episode:
+    *
+    * The observation tells you:
     * - state after an action
     * - reward gained for this action
     * - set of the next possible actions (can be static or dynamic)
     * - is the state terminal or not?
     */
-  def send(action: Action, frame: Frame): (Observation, Frame)
+  def step(action: Action, previousEpisode: Episode): (Observation, Episode)
 
   /** Human-readable environment description */
   def description: String
