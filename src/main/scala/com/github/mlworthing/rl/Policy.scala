@@ -39,8 +39,8 @@ trait Policy[State, Action] {
 case class Winner[A](action: A) extends Policy[Unit, A] {
 
   override def execute(environment: Environment[Unit, A], maxIterations: Int): Double = {
-    val (_, _, episode) = environment.initial
-    environment.step(action, episode).first.reward
+    val (_, _, frame) = environment.initial
+    environment.step(action, frame).first.reward
   }
 }
 
@@ -48,10 +48,10 @@ case class Winner[A](action: A) extends Policy[Unit, A] {
 case class Trajectory[S, A](actions: Seq[A]) extends Policy[S, A] {
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
-    val (_, _, episode) = environment.initial
+    val (_, _, frame) = environment.initial
     actions
-      .foldLeft((0d, episode)) {
-        case ((acc, episode), action) => environment.step(action, episode).map_1(_.reward + acc)
+      .foldLeft((0d, frame)) {
+        case ((acc, frame), action) => environment.step(action, frame).map_1(_.reward + acc)
       }
       .first
   }
@@ -61,17 +61,17 @@ case class Trajectory[S, A](actions: Seq[A]) extends Policy[S, A] {
 case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
-    val (_, _, initialEpisode) = environment.initial
+    val (_, _, initialFrame) = environment.initial
     @tailrec
-    def execute(state: S, rewardSum: Double, counter: Int, episode: environment.Episode): Double = {
-      val (observation, nextEpisode) =
-        if (policy.contains(state)) environment.step(policy(state), episode)
-        else (environment.Observation(state, 0d, Set.empty, isTerminal = true), episode)
+    def execute(state: S, rewardSum: Double, counter: Int, frame: environment.Frame): Double = {
+      val (observation, nextFrame) =
+        if (policy.contains(state)) environment.step(policy(state), frame)
+        else (environment.Observation(state, 0d, Set.empty, isTerminal = true), frame)
       val newRewardSum = rewardSum + observation.reward
       if (observation.isTerminal || counter > maxIterations) newRewardSum
-      else execute(observation.state, newRewardSum, counter + 1, nextEpisode)
+      else execute(observation.state, newRewardSum, counter + 1, nextFrame)
     }
-    execute(environment.initial._1, 0d, 0, initialEpisode)
+    execute(environment.initial._1, 0d, 0, initialFrame)
   }
 }
 
@@ -95,17 +95,17 @@ case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[
   }
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
-    val (_, _, initialEpisode) = environment.initial
+    val (_, _, initialFrame) = environment.initial
     @tailrec
-    def execute(s: S, rewardSum: Double, counter: Int, episode: environment.Episode): Double = {
+    def execute(s: S, rewardSum: Double, counter: Int, frame: environment.Frame): Double = {
       val random = Random.nextDouble()
       val actionSet = mapStateToSortedListOfActionsWithUpperBounds(s)
       val action = actionSet.find { case (_, limit) => random <= limit }.getOrElse(actionSet.head)._1
-      val (observation, nextEpisode) = environment.step(action, episode)
+      val (observation, nextFrame) = environment.step(action, frame)
       val newRewardSum = rewardSum + observation.reward
       if (observation.isTerminal || counter > maxIterations) newRewardSum
-      else execute(observation.state, newRewardSum, counter + 1, nextEpisode)
+      else execute(observation.state, newRewardSum, counter + 1, nextFrame)
     }
-    execute(environment.initial._1, 0d, 0, initialEpisode)
+    execute(environment.initial._1, 0d, 0, initialFrame)
   }
 }

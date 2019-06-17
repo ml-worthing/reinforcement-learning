@@ -27,7 +27,7 @@ import scala.util.Random
   */
 trait BoardEnvironment[State, Action] extends Environment[State, Action] {
 
-  case class Episode(currentState: State)
+  case class Frame(currentState: State)
 
   type Reward = Double
   type Probability = Double
@@ -67,23 +67,23 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   val actions: Set[Action] = actionMoves.keySet
   val (board, initialStates, terminalStates) = parseLayout
 
-  override val initial: (State, Set[Action], Episode) = {
+  override val initial: (State, Set[Action], Frame) = {
     val state = initialStates(Random.nextInt(initialStates.size))
-    (state, actions, Episode(state))
+    (state, actions, Frame(state))
   }
 
-  override def step(action: Action, episode: Episode): (Observation, Episode) = {
-    val moves = board(episode.currentState)(action)
+  override def step(action: Action, frame: Frame): (Observation, Frame) = {
+    val moves = board(frame.currentState)(action)
     val random = Random.nextDouble()
     val (_, (newState, _, reward)) = {
-      if (moves.isEmpty) (0d, (episode.currentState, 0, 0d))
+      if (moves.isEmpty) (0d, (frame.currentState, 0, 0d))
       else
         moves.tail.foldLeft((moves.head._2, moves.head)) {
           case ((acc, move), newMove) =>
             (acc + newMove._2, if (random <= acc) move else newMove)
         }
     }
-    (Observation(newState, reward, actions, terminalStates.contains(newState)), episode.copy(currentState = newState))
+    (Observation(newState, reward, actions, terminalStates.contains(newState)), frame.copy(currentState = newState))
   }
 
   /** Parses square tiles board */
