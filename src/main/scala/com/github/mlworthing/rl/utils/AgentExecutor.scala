@@ -28,15 +28,23 @@ case class AgentExecutor[State, Action, Config, E <: Environment[State, Action]]
   expected: Policy[State, Action],
   agent: Config => Agent[State, Action, E],
   configurations: Iterable[Config],
-  description: String) {
+  description: String,
+  configName: String) {
 
-  def execute(environment: => E, numberOfSamples: Int): ExecutionResults[Config] = {
+  def execute(environment: => E, numberOfRuns: Int): ExecutionResults[Config] = {
     val rates = configurations.map { config =>
-      val successful = (0 until numberOfSamples)
-        .count(_ => agent(config).solve(environment) == expected)
-      val successRate = (successful * 100d) / numberOfSamples
-      (config, successRate)
+      val results = for (_ <- 0 until numberOfRuns) yield {
+        val t0 = System.nanoTime()
+        val result = agent(config).solve(environment)
+        val t1 = System.nanoTime()
+        (result, t1 - t0)
+      }
+
+      val successful = results.count(_._1 == expected)
+      val successRate = (successful * 100d) / numberOfRuns
+      val totalTime = results.map(_._2).sum
+      (config, successRate, totalTime)
     }
-    ExecutionResults(description + "\n" + environment.description, rates.toSeq, numberOfSamples)
+    ExecutionResults(description + "\n\n" + environment.description, configName, rates.toSeq, numberOfRuns)
   }
 }
