@@ -22,7 +22,10 @@ import scala.util.Random
 
 /**
   * Reinforcement learning Policy API.
-  * Parametrised by the State and Action type.
+  *
+  * A policy is a mapping from states to actions.
+  *
+  * Parametrised by the `State` and `Action` types.
   * Represents the best knowledge gained in the learning process.
   */
 trait Policy[State, Action] {

@@ -18,8 +18,24 @@ package com.github.mlworthing.rl
 
 /**
   * Reinforcement learning Agent API.
-  * Parametrised by the State, Action and targeted environment type.
-  * Solves the environment finding the best policy.
+  *
+  * MDPs are meant to be a straightforward framing of the problem of
+  * learning from interaction to achieve a goal.
+  * The learner and decision maker is called the `Agent`.
+  * Anything that cannot be changed arbitrarily by the Agent is considered
+  * to be outside of it and thus part of the Environment
+  *
+  * The Agent is parametrised by the `State`, `Action` and by the targeted `Environment` type.
+  * In general, actions can be any decisions we want to learn how to make,
+  * and the states can be anything we can know that might be useful in making them.
+  *
+  * Any problem of learning goal-directed behavior can be reduced to three signals
+  * passing back and forth between an agent and its environment:
+  * 1) one signal to represent the choices made by the agent (the actions),
+  * 2) one signal to represent the basis on which the choices are made (the states),
+  * 3) and one signal to define the agent’s goal (the rewards)
+  *
+  * `Agent` solves the `Environment` finding the best `Policy`.
   */
 trait Agent[State, Action, E <: Environment[State, Action]] {
 
