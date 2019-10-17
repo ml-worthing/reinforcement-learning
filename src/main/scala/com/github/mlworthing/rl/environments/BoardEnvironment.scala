@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.environment
+package com.github.mlworthing.rl.environments
 
 import com.github.mlworthing.rl.Environment
 
 import scala.util.Random
 
 /**
-  * Board-like environment consisting of adjacent square tiles
+  * Board-like environment consisting of adjacent tiles
   * and set of actions resulting in one of possible moves
   * having known probabilities of success.
   */

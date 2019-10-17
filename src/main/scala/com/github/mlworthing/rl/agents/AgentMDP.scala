@@ -15,7 +15,7 @@
  */
 
 package com.github.mlworthing.rl
-package mdp
+package agents
 
 import com.github.mlworthing.rl.utils.Printer
 

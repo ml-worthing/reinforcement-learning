@@ -15,15 +15,24 @@
  */
 
 package com.github.mlworthing.rl
-package mdp
+package agents
 
-import com.github.mlworthing.rl.environment.BoardEnvironment
+import com.github.mlworthing.rl.environments.BoardEnvironment
 import com.github.mlworthing.rl.utils.Printer
 
 import scala.collection.mutable
 import scala.util.Random
 
-class AgentSimpleMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
+/**
+  * A MDP Agent applying dynamic programming method.
+  * Requires a complete and accurate model of the environment.
+  * @param gamma
+  * @param theta
+  * @param maxIterations
+  * @tparam State states represents anything we can know that might be useful in making decisions
+  * @tparam Action actions represents decisions we want to learn how to make
+  */
+class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
     extends Agent[State, Action, BoardEnvironment[State, Action]] with Printer {
 
   type Reward = Double

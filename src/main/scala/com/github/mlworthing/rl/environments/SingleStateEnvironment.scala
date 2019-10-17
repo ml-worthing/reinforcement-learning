@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.environment
+package com.github.mlworthing.rl.environments
 
 import com.github.mlworthing.rl.Environment
 
 /**
-  * Infinite stateless, non-terminal
+  * Continuous single state, non-terminal
   * environment with static set of actions.
+  *
+  * Applicable to the special case of the reinforcement learning problem
+  * in which there is only a single state, called bandit problems
   */
-trait StatelessEnvironment[Action] extends Environment[Unit, Action] {
+trait SingleStateEnvironment[Action] extends Environment[Unit, Action] {
 
   type Frame = Unit
 

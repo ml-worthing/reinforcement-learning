@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl.environment
+package com.github.mlworthing.rl.problems
 
-trait S0FGXFormat {
+import com.github.mlworthing.rl.agents.DynamicProgrammingAgent
+import com.github.mlworthing.rl.utils.PolicyExecutor
+import org.scalatest.{FreeSpec, Matchers}
 
-  def rewardFor(tile: String): Double = tile match {
-    case "F" => -1
-    case "G" => 1
-    case _   => 0
+class SuperMarioTest extends FreeSpec with Matchers {
+
+  "evaluate a policy for a Super Mario using AgentMDPDynamicProgramming" in {
+
+    val agent = new DynamicProgrammingAgent[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
+    val policy = agent.solve(SuperMario)
+
+    PolicyExecutor.execute(policy, SuperMario, maxIterations = 1000, numberOfSamples = 1000)
+
   }
-
-  def isAccessible(tile: String): Boolean = tile != "X"
-
-  def isStart(tile: String): Boolean = tile == "S"
-
-  def isTerminal(tile: String): Boolean = tile == "F" || tile == "G"
 }

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl
-package bandit
+package com.github.mlworthing.rl.problems
 
-import com.github.mlworthing.rl.environment.StatelessEnvironment
-import utils.GaussianRandom
+import com.github.mlworthing.rl.environments.SingleStateEnvironment
+import com.github.mlworthing.rl.utils.GaussianRandom
 
 /**
   * K-armed bandit problem, so named by analogy to a slot machine,
@@ -31,12 +30,12 @@ import utils.GaussianRandom
   *
   * @param arms - mapping of an arm number to the reward's gaussian distribution parameters (mean, range)
   */
-class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends StatelessEnvironment[A] {
+class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends SingleStateEnvironment[A] {
 
   override val actions: Set[A] = arms.keySet
 
   /**
-    * Bandit reward is a normal random number generated
+    * Bandit reward is a gaussian random number generated
     * for a given arm parameters (mean, range)
     **/
   override def reward(action: A): Double =

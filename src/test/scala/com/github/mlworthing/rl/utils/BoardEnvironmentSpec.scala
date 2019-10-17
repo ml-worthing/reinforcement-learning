@@ -17,7 +17,7 @@
 package com.github.mlworthing.rl
 package utils
 
-import mdp.{FrozenLake, SuperMario}
+import com.github.mlworthing.rl.problems.{FrozenLake, SuperMario}
 import org.scalatest.{Matchers, WordSpec}
 
 class BoardEnvironmentSpec extends WordSpec with Matchers {

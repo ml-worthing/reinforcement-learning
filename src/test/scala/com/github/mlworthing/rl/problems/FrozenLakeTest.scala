@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl
-package mdp
+package com.github.mlworthing.rl.problems
 
+import com.github.mlworthing.rl.Deterministic
+import com.github.mlworthing.rl.agents.{AgentMDP, DynamicProgrammingAgent}
 import com.github.mlworthing.rl.utils.PolicyExecutor
 import com.github.mlworthing.rlai.utils.UnitSpec
 
 class FrozenLakeTest extends UnitSpec {
 
-  "evaluate a policy for a Frozen Lake using AgentSimpleMDP" in {
+  "evaluate a policy for a Frozen Lake using AgentMDPDynamicProgramming" in {
 
-    val agent = new AgentSimpleMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
+    val agent = new DynamicProgrammingAgent[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
     val policy: Deterministic[Int, String] = agent.solve(FrozenLake)
 
     PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)

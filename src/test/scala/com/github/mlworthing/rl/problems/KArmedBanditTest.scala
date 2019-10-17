@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.github.mlworthing.rl
-package bandit
+package com.github.mlworthing.rl.problems
 
+import com.github.mlworthing.rl.Winner
+import com.github.mlworthing.rl.agents.{EpsilonGreedyNonStationaryProblemAgent, EpsilonGreedyStationaryProblemAgent}
 import com.github.mlworthing.rl.utils.AgentExecutor
 import org.scalatest.{FreeSpec, Matchers}
 import sun.management.resources.agent
