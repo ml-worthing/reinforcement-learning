@@ -18,6 +18,7 @@ package com.github.mlworthing.rl.problems
 
 import com.github.mlworthing.rl.Winner
 import com.github.mlworthing.rl.agents.{EpsilonGreedyNonStationaryProblemAgent, EpsilonGreedyStationaryProblemAgent}
+import com.github.mlworthing.rl.environments.SingleStateEnvironment
 import com.github.mlworthing.rl.utils.AgentExecutor
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
 import sun.management.resources.agent
@@ -25,87 +26,74 @@ import sun.management.resources.agent
 class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
 
   val arms = Map(
-    1 -> (0d, 10d, 7d),
-    2 -> (1d, 2d, 1d),
-    5 -> (2d, 4d, 1.5d),
-    7 -> (3d, 3d, 2d),
-    9 -> (-1d, 3d, 2d)
+    1 -> BanditArm.stationary.gaussian(mean = 0d, range = 10d, deviation = 7d),
+    2 -> BanditArm.stationary.uniform(mean = 1d, range = 2d),
+    5 -> BanditArm.drifting.gaussian(mean = 2d, range = 4d, deviation = 1.5d, drift = 0.001d),
+    7 -> BanditArm.drifting.gaussian(mean = 1d, range = 3d, deviation = 2d, drift = 0.002d),
+    9 -> BanditArm.stationary.uniform(mean = -1d, range = 2d)
   )
 
-  val kArmedBandit = new KArmedBandit(arms, 1000)
+  class KArmedBanditExecution[C](
+    underTest: KArmedBandit[Int],
+    executor: AgentExecutor[Unit, Int, C, SingleStateEnvironment[Int]]) {
+    val stats = executor.execute(underTest, 100)
+    stats.print
+    stats.maxRate should be > 99.0d
 
-  "find a solution for K-armed bandit problem using epsilon greedy stationary agent with variable number of steps" in {
-    val executor = AgentExecutor(
+  }
+
+  "find a solution for K-armed bandit problem using epsilon greedy stationary agent with variable number of steps" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyStationaryProblemAgent[Int](0.02, _),
+      agent = EpsilonGreedyStationaryProblemAgent[Int](0.02, _, initialValue = 0d),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy stationary agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
     )
+  )
 
-    val stats = executor.execute(kArmedBandit, 100)
-
-    stats.print
-    stats.maxRate should be > 99.0d
-  }
-
-  "find a solution for K-armed bandit problem using epsilon greedy stationary agent with variable exploitation factor (epsilon)" in {
-    val executor = AgentExecutor(
+  "find a solution for K-armed bandit problem using epsilon greedy stationary agent with variable exploitation factor (epsilon)" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyStationaryProblemAgent[Int](_, 1000),
+      agent = EpsilonGreedyStationaryProblemAgent[Int](_, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of epsilon greedy stationary agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
       "epsilon"
     )
+  )
 
-    val stats = executor.execute(kArmedBandit, 100)
-
-    stats.print
-    stats.maxRate should be > 99.0d
-  }
-
-  "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable number of steps" in {
-    val executor = AgentExecutor(
+  "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable number of steps" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, 0.2, _),
+      agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, 0.2, _, initialValue = 0d),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy non-stationary agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
     )
+  )
 
-    val stats = executor.execute(kArmedBandit, 100)
-
-    stats.print
-    stats.maxRate should be > 99.0d
-  }
-
-  "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable exploitation factor (epsilon)" in {
-    val executor = AgentExecutor(
+  "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable exploitation factor (epsilon)" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyNonStationaryProblemAgent[Int](_, 0.2, 1000),
+      agent = EpsilonGreedyNonStationaryProblemAgent[Int](_, 0.2, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of epsilon greedy non-stationary agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
       "epsilon"
     )
+  )
 
-    val stats = executor.execute(kArmedBandit, 100)
-
-    stats.print
-    stats.maxRate should be > 99.0d
-  }
-
-  "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable step size" in {
-    val executor = AgentExecutor(
+  "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable step size" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, _, 1000),
+      agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, _, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of epsilon greedy non-stationary agent (stepsToLearn=1000,epsilon=0.02)\nwith regard to the step size",
       "step size"
     )
-
-    val stats = executor.execute(kArmedBandit, 100)
-
-    stats.print
-    stats.maxRate should be > 99.0d
-  }
+  )
 }

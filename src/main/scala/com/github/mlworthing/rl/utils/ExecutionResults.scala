@@ -16,12 +16,12 @@
 
 package com.github.mlworthing.rl.utils
 
-/** Result of an Agent evaluation for number of different configurations. */
+/** Result of an Agent evaluation for a number of different configurations. */
 case class ExecutionResults[Config](
   description: String,
   configName: String,
   rates: Seq[(Config, Double, Long)],
-  numberOfSamples: Int) {
+  numberOfRuns: Int) {
 
   lazy val maxRate: Double = rates.maxBy(_._2)._2
   lazy val maxConfig: Config = rates.maxBy(_._2)._1
@@ -31,9 +31,7 @@ case class ExecutionResults[Config](
     println()
     println(description)
     println()
-    println(s"Agent success rates after")
-    println(s"$numberOfSamples runs of each config:")
-    println()
+    println(s"Agent success rates after $numberOfRuns runs of each config:")
     val separator = "-" * 27
     println(separator)
     println(f"| $configName%-10s| rate | time |")
