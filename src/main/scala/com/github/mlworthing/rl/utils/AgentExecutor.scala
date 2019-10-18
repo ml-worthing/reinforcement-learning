@@ -32,17 +32,16 @@ case class AgentExecutor[State, Action, Config, E <: Environment[State, Action]]
   configName: String) {
 
   def execute(environment: => E, numberOfRuns: Int): ExecutionResults[Config] = {
-    val rates = configurations.map { config =>
-      val results = for (_ <- 0 until numberOfRuns) yield {
-        val t0 = System.nanoTime()
-        val result = agent(config).solve(environment)
-        val t1 = System.nanoTime()
-        (result, t1 - t0)
-      }
 
-      val successful = results.count(_._1 == expected)
+    val rates = configurations.map { config =>
+      val t0 = System.nanoTime()
+      val results = for (_ <- 0 until numberOfRuns) yield {
+        val result = agent(config).solve(environment)
+        result
+      }
+      val totalTime = System.nanoTime() - t0
+      val successful = results.count(_ == expected)
       val successRate = (successful * 100d) / numberOfRuns
-      val totalTime = results.map(_._2).sum
       (config, successRate, totalTime)
     }
     ExecutionResults(description + "\n\n" + environment.description, configName, rates.toSeq, numberOfRuns)
