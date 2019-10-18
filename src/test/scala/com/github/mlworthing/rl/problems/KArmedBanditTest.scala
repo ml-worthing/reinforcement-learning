@@ -19,23 +19,22 @@ package com.github.mlworthing.rl.problems
 import com.github.mlworthing.rl.Winner
 import com.github.mlworthing.rl.agents.{EpsilonGreedyNonStationaryProblemAgent, EpsilonGreedyStationaryProblemAgent}
 import com.github.mlworthing.rl.utils.AgentExecutor
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
 import sun.management.resources.agent
 
-class KArmedBanditTest extends FreeSpec with Matchers {
+class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
 
   val arms = Map(
-    1 -> (0d, 10d),
-    2 -> (1d, 2d),
-    5 -> (2d, 4d),
-    7 -> (3d, 3d),
-    9 -> (-1d, 3d)
+    1 -> (0d, 10d, 7d),
+    2 -> (1d, 2d, 1d),
+    5 -> (2d, 4d, 1.5d),
+    7 -> (3d, 3d, 2d),
+    9 -> (-1d, 3d, 2d)
   )
 
+  val kArmedBandit = new KArmedBandit(arms, 1000)
+
   "find a solution for K-armed bandit problem using epsilon greedy stationary agent with variable number of steps" in {
-
-    val kArmedBandit = new KArmedBandit(arms)
-
     val executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyStationaryProblemAgent[Int](0.02, _),
@@ -51,9 +50,6 @@ class KArmedBanditTest extends FreeSpec with Matchers {
   }
 
   "find a solution for K-armed bandit problem using epsilon greedy stationary agent with variable exploitation factor (epsilon)" in {
-
-    val kArmedBandit = new KArmedBandit(arms)
-
     val executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyStationaryProblemAgent[Int](_, 1000),
@@ -69,9 +65,6 @@ class KArmedBanditTest extends FreeSpec with Matchers {
   }
 
   "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable number of steps" in {
-
-    val kArmedBandit = new KArmedBandit(arms)
-
     val executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, 0.2, _),
@@ -87,9 +80,6 @@ class KArmedBanditTest extends FreeSpec with Matchers {
   }
 
   "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable exploitation factor (epsilon)" in {
-
-    val kArmedBandit = new KArmedBandit(arms)
-
     val executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyNonStationaryProblemAgent[Int](_, 0.2, 1000),
@@ -105,9 +95,6 @@ class KArmedBanditTest extends FreeSpec with Matchers {
   }
 
   "find a solution for K-armed bandit problem using epsilon greedy non-stationary agent with variable step size" in {
-
-    val kArmedBandit = new KArmedBandit(arms)
-
     val executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, _, 1000),

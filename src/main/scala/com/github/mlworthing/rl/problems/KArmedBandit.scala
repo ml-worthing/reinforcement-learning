@@ -28,9 +28,9 @@ import com.github.mlworthing.rl.utils.GaussianRandom
   * concentrating your actions on the best levers.
   * @see <https://mitpress.mit.edu/books/reinforcement-learning-second-edition>
   *
-  * @param arms - mapping of an arm number to the reward's gaussian distribution parameters (mean, range)
+  * @param arms - mapping of an arm number to the reward's gaussian distribution parameters (mean, range, deviation)
   */
-class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends SingleStateEnvironment[A] {
+class KArmedBandit[A](arms: Map[A, (Double, Double, Double)], cacheSize: Int = 0) extends SingleStateEnvironment[A] {
 
   override val actions: Set[A] = arms.keySet
 
@@ -42,14 +42,16 @@ class KArmedBandit[A](arms: Map[A, (Double, Double)]) extends SingleStateEnviron
     arms
       .get(action)
       .map {
-        case (mean, range) =>
-          GaussianRandom.next(mean, range / 7d, mean - range / 2, mean + range / 2)
+        case (mean, range, deviation) =>
+          GaussianRandom.next(mean, deviation, mean - range / 2, mean + range / 2)
       }
       .getOrElse(throw new Exception(s"Invalid action $action"))
 
   override def description: String =
     s"""The ${arms.size}-armed bandit environment.
-       |${arms.map { case (k, (m, r)) => f"arm #$k mean$m%6.1f  range$r%6.1f" }.mkString("\n")}""".stripMargin
+       |${arms
+         .map { case (k, (m, r, d)) => f"arm #$k mean$m%6.1f  range$r%6.1f deviation$d%6.1f" }
+         .mkString("\n")}""".stripMargin
 
   override def show[V](
     values: Unit => Option[V],
