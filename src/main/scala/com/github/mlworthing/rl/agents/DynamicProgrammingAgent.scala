@@ -24,11 +24,11 @@ import scala.collection.mutable
 import scala.util.Random
 
 /**
-  * A MDP Agent applying dynamic programming method.
+  * A MDP Agent applying dynamic programming (tabular) method.
   * Requires a complete and accurate model of the environment.
-  * @param gamma
-  * @param theta
-  * @param maxIterations
+  * @param gamma action reward decay
+  * @param theta convergence threshold
+  * @param maxIterations max number of episodes
   * @tparam State states represents anything we can know that might be useful in making decisions
   * @tparam Action actions represents decisions we want to learn how to make
   */
@@ -55,25 +55,25 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
     printPolicy(s"Initial random policy:", initialPolicy, environment)
 
     var policy = initialPolicy
-    var newPolicy = initialPolicy
+    var nextPolicy = initialPolicy
 
     var policyCounter = 0
 
     do {
-      policy = newPolicy
+      policy = nextPolicy
 
       val (v, counter) = evaluatePolicy(environment)(policy)
 
       printStateValue(s"State-value function after $counter iterations converged to:", v, environment)
 
-      newPolicy = improvePolicy(environment)(v)
+      nextPolicy = improvePolicy(environment)(v)
       policyCounter = policyCounter + 1
 
-      printPolicy(s"Improved policy no. $policyCounter:", newPolicy, environment)
+      printPolicy(s"Improved policy no. $policyCounter:", nextPolicy, environment)
 
-    } while (!isStable(policy, newPolicy))
+    } while (!isStable(policy, nextPolicy))
 
-    Deterministic(newPolicy)
+    Deterministic(nextPolicy)
   }
 
   def evaluatePolicy(environment: BoardEnvironment[State, Action])(policy: Policy): (StateValue, Int) = {
@@ -99,10 +99,10 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
         val moves: Seq[(State, Probability, Reward)] =
           policy.get(state).map(m => P(state)(m)).getOrElse(Seq.empty)
 
-        for ((newState, probability, reward) <- moves) {
+        for ((nextState, probability, reward) <- moves) {
           val value =
-            if (environment.terminalStates.contains(newState)) reward
-            else reward + gamma * old_V(newState)
+            if (environment.terminalStates.contains(nextState)) reward
+            else reward + gamma * old_V(nextState)
 
           // update the state value
           V(state) = V(state) + probability * value

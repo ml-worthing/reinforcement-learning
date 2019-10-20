@@ -17,7 +17,7 @@
 package com.github.mlworthing.rl.problems
 
 import com.github.mlworthing.rl.Winner
-import com.github.mlworthing.rl.agents.{EpsilonGreedyNonStationaryProblemAgent, EpsilonGreedyStationaryProblemAgent}
+import com.github.mlworthing.rl.agents.{EpsilonGreedyConstantStepSizeAgent, EpsilonGreedySampleAverageAgent}
 import com.github.mlworthing.rl.environments.SingleStateEnvironment
 import com.github.mlworthing.rl.utils.AgentExecutor
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
@@ -46,7 +46,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyStationaryProblemAgent[Int](0.02, _, initialValue = 0d),
+      agent = EpsilonGreedySampleAverageAgent[Int](0.02, _, initialValue = 0d),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy stationary agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
@@ -57,7 +57,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyStationaryProblemAgent[Int](_, 1000, initialValue = 0d),
+      agent = EpsilonGreedySampleAverageAgent[Int](_, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of epsilon greedy stationary agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
       "epsilon"
@@ -68,7 +68,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, 0.2, _, initialValue = 0d),
+      agent = EpsilonGreedyConstantStepSizeAgent[Int](0.02, 0.2, _, initialValue = 0d),
       configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy non-stationary agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
@@ -79,7 +79,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyNonStationaryProblemAgent[Int](_, 0.2, 1000, initialValue = 0d),
+      agent = EpsilonGreedyConstantStepSizeAgent[Int](_, 0.2, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of epsilon greedy non-stationary agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
       "epsilon"
@@ -90,7 +90,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
-      agent = EpsilonGreedyNonStationaryProblemAgent[Int](0.02, _, 1000, initialValue = 0d),
+      agent = EpsilonGreedyConstantStepSizeAgent[Int](0.02, _, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of epsilon greedy non-stationary agent (stepsToLearn=1000,epsilon=0.02)\nwith regard to the step size",
       "step size"

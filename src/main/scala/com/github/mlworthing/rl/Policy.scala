@@ -23,7 +23,7 @@ import scala.util.Random
 /**
   * Reinforcement learning Policy API.
   *
-  * A policy is a mapping from states to actions.
+  * A policy is a mapping from states to probabilities of selecting each possible action.
   *
   * Parametrised by the `State` and `Action` types.
   * Represents the best knowledge gained in the learning process.
@@ -38,7 +38,7 @@ trait Policy[State, Action] {
 // COMMON POLICIES
 //----------------
 
-/** The best single action to take */
+/** The best single action to take always */
 case class Winner[A](action: A) extends Policy[Unit, A] {
 
   override def execute(environment: Environment[Unit, A], maxIterations: Int): Double = {
@@ -47,7 +47,7 @@ case class Winner[A](action: A) extends Policy[Unit, A] {
   }
 }
 
-/** The best plan, sequence of actions to take */
+/** The best actions to take no matter what current state is, each with probability 1 */
 case class Trajectory[S, A](actions: Seq[A]) extends Policy[S, A] {
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
@@ -60,7 +60,7 @@ case class Trajectory[S, A](actions: Seq[A]) extends Policy[S, A] {
   }
 }
 
-/** The best action to take given the current state */
+/** The best actions to take given the current state, each with probability 1 */
 case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
 
   override def execute(environment: Environment[S, A], maxIterations: Int): Double = {
@@ -78,7 +78,7 @@ case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
   }
 }
 
-/** The set of alternative actions to take randomly given the current state */
+/** The set of alternative actions to take given the current state with their respective probabilities */
 case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[S, A] {
 
   lazy val mapStateToSortedListOfActionsWithUpperBounds: Map[S, List[(A, Double)]] = {
