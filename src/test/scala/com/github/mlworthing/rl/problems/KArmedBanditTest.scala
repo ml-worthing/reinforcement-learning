@@ -47,7 +47,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedySampleAverageAgent[Int](0.02, _, initialValue = 0d),
-      configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
+      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy sample-average agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
     )
@@ -69,7 +69,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyConstantStepSizeAgent[Int](0.02, 0.2, _, initialValue = 0d),
-      configurations = Seq(10, 50, 100, 200, 350, 500, 1000, 5000),
+      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
       "Evaluation of epsilon greedy constant-step agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
     )
@@ -105,6 +105,17 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of epsilon greedy unbiased constant-step agent (stepsToLearn=1000,epsilon=0.02)\nwith regard to the step size",
       "step size"
+    )
+  )
+
+  "find a solution for K-armed bandit problem using epsilon greedy constant-step agent with variable number of steps and non-zero initial value" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
+      expected = Winner(7),
+      agent = EpsilonGreedyConstantStepSizeAgent[Int](0.02, 0.2, _, initialValue = 10d),
+      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
+      "Evaluation of epsilon greedy constant-step agent (epsilon=0.02)\nwith regard to the number of steps and non-zero initial value",
+      "steps"
     )
   )
 }
