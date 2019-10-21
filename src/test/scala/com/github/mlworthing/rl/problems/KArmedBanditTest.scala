@@ -17,7 +17,7 @@
 package com.github.mlworthing.rl.problems
 
 import com.github.mlworthing.rl.Winner
-import com.github.mlworthing.rl.agents.singlestate.{EpsilonGreedyConstantStepSizeAgent, EpsilonGreedySampleAverageAgent, EpsilonGreedyUnbiasedConstantStepSizeAgent, GreedySampleAverageAgent, UpperConfidenceBoundGreedySampleAverageAgent}
+import com.github.mlworthing.rl.agents.singlestate.{EpsilonGreedyConstantStepSizeAgent, EpsilonGreedySampleAverageAgent, EpsilonGreedyUnbiasedConstantStepSizeAgent, GreedySampleAverageAgent, StochasticGradientAscentAgent, UpperConfidenceBoundGreedySampleAverageAgent}
 import com.github.mlworthing.rl.environments.SingleStateEnvironment
 import com.github.mlworthing.rl.utils.{AgentExecutor, ExecutionResults}
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
@@ -153,6 +153,17 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of upper-confidence-bound greedy sample-average agent (stepsToLearn=100)\nwith regard to the exploration factor (c)",
       "c"
+    )
+  )
+
+  "find a solution for K-armed bandit problem using stochastic-gradient-ascent sample-average agent with variable number of steps" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
+      expected = Winner(7),
+      agent = StochasticGradientAscentAgent[Int](alpha = 0.2, _, initialValue = 0d),
+      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
+      "Evaluation of stochastic-gradient-ascent sample-average agent (c=0.2)\nwith regard to the number of steps",
+      "steps"
     )
   )
 }
