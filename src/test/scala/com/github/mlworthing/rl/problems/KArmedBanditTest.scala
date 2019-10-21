@@ -17,17 +17,19 @@
 package com.github.mlworthing.rl.problems
 
 import com.github.mlworthing.rl.Winner
-import com.github.mlworthing.rl.agents.{EpsilonGreedyConstantStepSizeAgent, EpsilonGreedySampleAverageAgent, EpsilonGreedyUnbiasedConstantStepSizeAgent}
+import com.github.mlworthing.rl.agents.singlestate.{EpsilonGreedyConstantStepSizeAgent, EpsilonGreedySampleAverageAgent, EpsilonGreedyUnbiasedConstantStepSizeAgent, GreedySampleAverageAgent, UpperConfidenceBoundGreedySampleAverageAgent}
 import com.github.mlworthing.rl.environments.SingleStateEnvironment
-import com.github.mlworthing.rl.utils.AgentExecutor
+import com.github.mlworthing.rl.utils.{AgentExecutor, ExecutionResults}
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
 import sun.management.resources.agent
 
 class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
 
+  val numberOfRuns = 100
+
   val arms = Map(
     1 -> BanditArm.stationary.gaussian(mean = 0d, range = 10d, deviation = 7d),
-    2 -> BanditArm.stationary.uniform(mean = 1d, range = 2d),
+    2 -> BanditArm.stationary.gaussian(mean = 1d, range = 2d, deviation = 2d),
     5 -> BanditArm.drifting.gaussian(mean = 2d, range = 4d, deviation = 1.5d, drift = 0.001d),
     7 -> BanditArm.drifting.gaussian(mean = 1d, range = 3d, deviation = 2d, drift = 0.002d),
     9 -> BanditArm.stationary.uniform(mean = -1d, range = 2d)
@@ -36,86 +38,121 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
   class KArmedBanditExecution[C](
     underTest: KArmedBandit[Int],
     executor: AgentExecutor[Unit, Int, C, SingleStateEnvironment[Int]]) {
-    val stats = executor.execute(underTest, 100)
+    val stats: ExecutionResults[C] = executor.execute(underTest, numberOfRuns)
     stats.print
     stats.maxRate should be > 99.0d
-
   }
 
-  "find a solution for K-armed bandit problem using epsilon greedy sample-average agent with variable number of steps" in new KArmedBanditExecution(
+  "do not find a solution for K-armed bandit problem using greedy sample-average agent with variable number of steps" in {
+    val underTest = new KArmedBandit(arms)
+    val executor = AgentExecutor(
+      expected = Winner(7),
+      agent = GreedySampleAverageAgent[Int](_, initialValue = 0d),
+      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
+      "Evaluation of greedy sample-average agent\nwith regard to the number of steps",
+      "steps"
+    )
+    val stats = executor.execute(underTest, numberOfRuns)
+    stats.print
+    stats.maxRate shouldBe 0
+  }
+
+  "find a solution for K-armed bandit problem using epsilon-greedy sample-average agent with variable number of steps" in new KArmedBanditExecution(
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedySampleAverageAgent[Int](0.02, _, initialValue = 0d),
       configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
-      "Evaluation of epsilon greedy sample-average agent (epsilon=0.02)\nwith regard to the number of steps",
+      "Evaluation of epsilon-greedy sample-average agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
     )
   )
 
-  "find a solution for K-armed bandit problem using epsilon greedy sample-average agent with variable exploitation factor (epsilon)" in new KArmedBanditExecution(
+  "find a solution for K-armed bandit problem using epsilon-greedy sample-average agent with variable exploitation factor (epsilon)" in new KArmedBanditExecution(
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedySampleAverageAgent[Int](_, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
-      "Evaluation of epsilon greedy sample-average agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
+      "Evaluation of epsilon-greedy sample-average agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
       "epsilon"
     )
   )
 
-  "find a solution for K-armed bandit problem using epsilon greedy constant-step agent with variable number of steps" in new KArmedBanditExecution(
+  "find a solution for K-armed bandit problem using epsilon-greedy constant-step agent with variable number of steps" in new KArmedBanditExecution(
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyConstantStepSizeAgent[Int](0.02, 0.2, _, initialValue = 0d),
       configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
-      "Evaluation of epsilon greedy constant-step agent (epsilon=0.02)\nwith regard to the number of steps",
+      "Evaluation of epsilon-greedy constant-step agent (epsilon=0.02)\nwith regard to the number of steps",
       "steps"
     )
   )
 
-  "find a solution for K-armed bandit problem using epsilon greedy constant-step agent with variable exploitation factor (epsilon)" in new KArmedBanditExecution(
+  "find a solution for K-armed bandit problem using epsilon-greedy constant-step agent with variable exploitation factor (epsilon)" in new KArmedBanditExecution(
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyConstantStepSizeAgent[Int](_, 0.2, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
-      "Evaluation of epsilon greedy constant-step agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
+      "Evaluation of epsilon-greedy constant-step agent (stepsToLearn=1000)\nwith regard to the exploitation factor (epsilon)",
       "epsilon"
     )
   )
 
-  "find a solution for K-armed bandit problem using epsilon greedy constant-step agent with variable step size" in new KArmedBanditExecution(
+  "find a solution for K-armed bandit problem using epsilon-greedy constant-step agent with variable step size" in new KArmedBanditExecution(
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyConstantStepSizeAgent[Int](0.02, _, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
-      "Evaluation of epsilon greedy constant-step agent (stepsToLearn=1000,epsilon=0.02)\nwith regard to the step size",
+      "Evaluation of epsilon-greedy constant-step agent (stepsToLearn=1000,epsilon=0.02)\nwith regard to the step size",
       "step size"
     )
   )
 
-  "find a solution for K-armed bandit problem using epsilon greedy unbiased constant-step agent with variable step size" in new KArmedBanditExecution(
+  "find a solution for K-armed bandit problem using epsilon-greedy unbiased constant-step agent with variable step size" in new KArmedBanditExecution(
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyUnbiasedConstantStepSizeAgent[Int](0.02, _, 1000, initialValue = 0d),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
-      "Evaluation of epsilon greedy unbiased constant-step agent (stepsToLearn=1000,epsilon=0.02)\nwith regard to the step size",
+      "Evaluation of epsilon-greedy unbiased constant-step agent (stepsToLearn=1000,epsilon=0.02)\nwith regard to the step size",
       "step size"
     )
   )
 
-  "find a solution for K-armed bandit problem using epsilon greedy constant-step agent with variable number of steps and non-zero initial value" in new KArmedBanditExecution(
+  "find a solution for K-armed bandit problem using epsilon-greedy constant-step agent with variable number of steps and non-zero initial value" in new KArmedBanditExecution(
     underTest = new KArmedBandit(arms),
     executor = AgentExecutor(
       expected = Winner(7),
       agent = EpsilonGreedyConstantStepSizeAgent[Int](0.02, 0.2, _, initialValue = 10d),
       configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
-      "Evaluation of epsilon greedy constant-step agent (epsilon=0.02)\nwith regard to the number of steps and non-zero initial value",
+      "Evaluation of epsilon-greedy constant-step agent (epsilon=0.02)\nwith regard to the number of steps and non-zero initial value",
       "steps"
+    )
+  )
+
+  "find a solution for K-armed bandit problem using upper-confidence-bound greedy sample-average agent with variable number of steps" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
+      expected = Winner(7),
+      agent = UpperConfidenceBoundGreedySampleAverageAgent[Int](explorationFactor = 0.2, _, initialValue = 0d),
+      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
+      "Evaluation of upper-confidence-bound greedy sample-average agent (c=0.2)\nwith regard to the number of steps",
+      "steps"
+    )
+  )
+
+  "find a solution for K-armed bandit problem using upper-confidence-bound greedy sample-average agent with variable exploration factor (c)" in new KArmedBanditExecution(
+    underTest = new KArmedBandit(arms),
+    executor = AgentExecutor(
+      expected = Winner(7),
+      agent = UpperConfidenceBoundGreedySampleAverageAgent[Int](_, 100, initialValue = 0d),
+      configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
+      "Evaluation of upper-confidence-bound greedy sample-average agent (stepsToLearn=100)\nwith regard to the exploration factor (c)",
+      "c"
     )
   )
 }
