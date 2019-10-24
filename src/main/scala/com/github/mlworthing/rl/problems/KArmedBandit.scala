@@ -51,12 +51,6 @@ class KArmedBandit[A](arms: Map[A, BanditArm]) extends SingleStateEnvironment[A]
        |${arms
          .map { case (k, arm) => f"arm #$k ${arm.description}" }
          .mkString("\n")}""".stripMargin
-
-  override def show[V](
-    values: Unit => Option[V],
-    format: (Unit, V) => String,
-    cellLength: Int,
-    showForTerminalTiles: Boolean): String = description
 }
 
 trait BanditArm {

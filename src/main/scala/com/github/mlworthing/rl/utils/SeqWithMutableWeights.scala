@@ -77,14 +77,10 @@ final class SeqWithMutableWeights[K](
     val random: Double = Random.nextDouble() * total
     var i = 0
     var level = boost(weights(keys.head))
-    while (random > level) {
+    while (random >= level) {
       i = i + 1
-      if (i == keys.size) {
-        print(random, level, total, weights)
-      }
       level = level + boost(weights(keys(i)))
     }
-    if (i == -1) print(random, level, total, weights)
     keys(i)
   }
 

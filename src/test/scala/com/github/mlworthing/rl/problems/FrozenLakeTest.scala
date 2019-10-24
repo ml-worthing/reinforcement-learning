@@ -31,7 +31,7 @@ class FrozenLakeTest extends UnitSpec {
     PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
   }
 
-  "evaluate a policy for a Frozen Lake using AgentMDP" in {
+  "evaluate a policy for a Frozen Lake using AgentMDP" ignore {
 
     val agent = new AgentMDP[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
     val policy: Deterministic[Int, String] = agent.solve(FrozenLake)

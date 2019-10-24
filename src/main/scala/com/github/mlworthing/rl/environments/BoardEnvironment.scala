@@ -16,25 +16,12 @@
 
 package com.github.mlworthing.rl.environments
 
-import com.github.mlworthing.rl.Environment
-
-import scala.util.Random
-
 /**
   * Board-like environment consisting of adjacent tiles
   * and set of actions resulting in one of possible moves
   * having known probabilities of success.
   */
-trait BoardEnvironment[State, Action] extends Environment[State, Action] {
-
-  case class Frame(currentState: State)
-
-  type Reward = Double
-  type Probability = Double
-
-  /** Board represents map of states to map of actions to the sequence of possible move results */
-  type MoveResult = (State, Probability, Reward)
-  type Board = Map[State, Map[Action, Seq[MoveResult]]]
+trait BoardEnvironment[State, Action] extends FiniteEnvironment[State, Action] {
 
   /** Main action move, its probability and related unlucky moves */
   type Move = (Int, Int)
@@ -64,34 +51,14 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
   def isStart(tile: String): Boolean
   def isTerminal(tile: String): Boolean
 
-  val actions: Set[Action] = actionMoves.keySet
-  val (board, initialStates, terminalStates) = parseLayout
-
-  override val initial: (State, Set[Action], Frame) = {
-    val state = initialStates(Random.nextInt(initialStates.size))
-    (state, actions, Frame(state))
-  }
-
-  override def step(action: Action, frame: Frame): (Observation, Frame) = {
-    val moves = board(frame.currentState)(action)
-    val random = Random.nextDouble()
-    val (_, (newState, _, reward)) = {
-      if (moves.isEmpty) (0d, (frame.currentState, 0, 0d))
-      else
-        moves.tail.foldLeft((moves.head._2, moves.head)) {
-          case ((acc, move), newMove) =>
-            (acc + newMove._2, if (random <= acc) move else newMove)
-        }
-    }
-    (Observation(newState, reward, actions, terminalStates.contains(newState)), frame.copy(currentState = newState))
-  }
+  override val (transitionGraph, initialStates, terminalStates) = parseLayout
 
   /** Parses square tiles board */
-  private def parseLayout: (Board, Seq[State], Seq[State]) = {
+  private def parseLayout: (TransitionGraph, Seq[State], Set[State]) = {
 
     def fit(i: Int, minInc: Int, maxExc: Int): Int = if (i < minInc) minInc else if (i >= maxExc) maxExc - 1 else i
 
-    def computeMoveResult(position: (Int, Int), move: (Int, Int), probability: Double): Option[MoveResult] = {
+    def computeMoveResult(position: (Int, Int), move: (Int, Int), probability: Double): Option[Response] = {
       val target =
         (fit(position._1 + move._1, 0, tiles.length), fit(position._2 + move._2, 0, tiles(position._1).length))
       val tile = tileAt(target)
@@ -105,7 +72,7 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
     val initialStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isStart(tail)     => stateAt(r, c) }.toSeq
     val terminalStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isTerminal(tail) => stateAt(r, c) }.toSeq
 
-    val board: Board = tileAt.collect {
+    val board: TransitionGraph = tileAt.collect {
       case (position, tile) if isAccessible(tile) =>
         val state = stateAt(position._1, position._2)
         state -> {
@@ -124,7 +91,7 @@ trait BoardEnvironment[State, Action] extends Environment[State, Action] {
         }
     }
 
-    (board, initialStates, terminalStates)
+    (board, initialStates, terminalStates.toSet)
   }
 
   override def description: String = layout

@@ -42,7 +42,7 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
 
   override def solve(environment: BoardEnvironment[State, Action]): Deterministic[State, Action] = {
 
-    val P: environment.Board = environment.board
+    val P: environment.TransitionGraph = environment.transitionGraph
 
     println(environment.layout)
 
@@ -78,7 +78,7 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
 
   def evaluatePolicy(environment: BoardEnvironment[State, Action])(policy: Policy): (StateValue, Int) = {
 
-    val P: environment.Board = environment.board
+    val P: environment.TransitionGraph = environment.transitionGraph
     val states = P.keys.toSeq
 
     var delta = 0d
@@ -120,7 +120,7 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
 
   def improvePolicy(environment: BoardEnvironment[State, Action])(V: StateValue): Policy = {
 
-    val P: environment.Board = environment.board
+    val P: environment.TransitionGraph = environment.transitionGraph
     val states = P.keys.toSeq
 
     var newPolicy: Policy = Map.empty

@@ -70,9 +70,10 @@ trait Environment[State, Action] {
   /** Human-readable environment description */
   def description: String
 
+  /** Visualizes environment */
   def show[V](
     values: State => Option[V],
     format: (State, V) => String,
     cellLength: Int,
-    showForTerminalTiles: Boolean): String
+    showForTerminalTiles: Boolean): String = description
 }

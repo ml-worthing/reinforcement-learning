@@ -30,7 +30,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
   def stationaryArms = Map(
     1 -> BanditArm.stationary.gaussian(mean = 0d, range = 10d, deviation = 7d),
     2 -> BanditArm.stationary.gaussian(mean = 1d, range = 2d, deviation = 2d),
-    5 -> BanditArm.stationary.uniform(mean = 2d, range = 4d /*, deviation = 1.5d*/ ),
+    5 -> BanditArm.stationary.uniform(mean = 2d, range = 4d),
     7 -> BanditArm.stationary.gaussian(mean = 2.5d, range = 3d, deviation = 2d),
     9 -> BanditArm.stationary.uniform(mean = -1d, range = 2d)
   )
@@ -38,7 +38,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
   def nonStationaryArms = Map(
     1 -> BanditArm.stationary.gaussian(mean = 0d, range = 10d, deviation = 7d),
     2 -> BanditArm.stationary.gaussian(mean = 1d, range = 2d, deviation = 2d),
-    5 -> BanditArm.drifting.uniform(mean = 2d, range = 4d /*, deviation = 1.5d*/, drift = 0.01d),
+    5 -> BanditArm.drifting.uniform(mean = 2d, range = 4d, drift = 0.01d),
     7 -> BanditArm.drifting.gaussian(mean = 1d, range = 3d, deviation = 2d, drift = 1d),
     9 -> BanditArm.stationary.uniform(mean = -1d, range = 2d)
   )
@@ -160,7 +160,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     underTest = { stationaryBandit },
     executor = AgentExecutor(
       expected = Winner(7),
-      agent = UpperConfidenceBoundGreedyAgent[Int](_, 100, initialValue = 0d, constantStepSize = None),
+      agent = UpperConfidenceBoundGreedyAgent[Int](_, 200, initialValue = 0d, constantStepSize = None),
       configurations = Seq(0.99, 0.9, 0.8, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.001),
       "Evaluation of upper-confidence-bound greedy sample-average agent (stepsToLearn=100)\nwith regard to the exploration factor (c)",
       "c"
@@ -172,7 +172,7 @@ class KArmedBanditTest extends FreeSpec with Matchers with BeforeAndAfterAll {
     executor = AgentExecutor(
       expected = Winner(7),
       agent = StochasticGradientAscentAgent[Int](alpha = 0.2, _, initialValue = 0d, constantStepSize = Some(0.1)),
-      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500, 1000, 5000),
+      configurations = Seq(5, 10, 25, 50, 100, 200, 350, 500),
       "Evaluation of stochastic-gradient-ascent constant step size agent (c=0.2)\nwith regard to the number of steps",
       "steps"
     )
