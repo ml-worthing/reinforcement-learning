@@ -21,7 +21,7 @@ package com.github.mlworthing.rl.environments
   * and set of actions resulting in one of possible moves
   * having known probabilities of success.
   */
-trait BoardEnvironment[State, Action] extends FiniteEnvironment[State, Action] {
+trait BoardEnvironment[State, Action] extends StaticFiniteEnvironment[State, Action] {
 
   /** Main action move, its probability and related unlucky moves */
   type Move = (Int, Int)
@@ -51,14 +51,14 @@ trait BoardEnvironment[State, Action] extends FiniteEnvironment[State, Action] {
   def isStart(tile: String): Boolean
   def isTerminal(tile: String): Boolean
 
-  override val (transitionGraph, initialStates, terminalStates) = parseLayout
+  val (transitionGraph, initialStates, terminalStates) = parseLayout
 
   /** Parses square tiles board */
   private def parseLayout: (TransitionGraph, Seq[State], Set[State]) = {
 
     def fit(i: Int, minInc: Int, maxExc: Int): Int = if (i < minInc) minInc else if (i >= maxExc) maxExc - 1 else i
 
-    def computeMoveResult(position: (Int, Int), move: (Int, Int), probability: Double): Option[Response] = {
+    def computeMoveResult(position: (Int, Int), move: (Int, Int), probability: Double): Option[Transition] = {
       val target =
         (fit(position._1 + move._1, 0, tiles.length), fit(position._2 + move._2, 0, tiles(position._1).length))
       val tile = tileAt(target)

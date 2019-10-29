@@ -1,6 +1,6 @@
 package com.github.mlworthing.rl.problems
 
-import com.github.mlworthing.rl.environments.FiniteEnvironment
+import com.github.mlworthing.rl.environments.{FiniteEnvironment, StaticFiniteEnvironment}
 
 /**
   * Based on "Reinforcement Learning: An Introduction. Second edition"
@@ -19,16 +19,20 @@ object RecyclingRobot {
   case object Wait extends Action
   case object Recharge extends Action
 
-  def apply(alpha: Double, beta: Double, rewardSearch: Double, rewardWait: Double): FiniteEnvironment[State, Action] =
-    new FiniteEnvironment[State, Action] {
+  def apply(
+    alpha: Double,
+    beta: Double,
+    rewardSearch: Double,
+    rewardWait: Double): StaticFiniteEnvironment[State, Action] =
+    new StaticFiniteEnvironment[State, Action] {
 
-      override def description: String =
+      final override def description: String =
         "The mobile robot having 2 states (low,high energy) and 3 possible actions (search, wait, recharge)."
 
-      override val initialStates: Seq[State] = Seq(HighEnergy, LowEnergy)
-      override val terminalStates: Set[State] = Set()
+      final override val initialStates: Seq[State] = Seq(HighEnergy)
+      final override val terminalStates: Set[State] = Set()
 
-      override val transitionGraph: TransitionGraph = Map(
+      final override val transitionGraph: TransitionGraph = Map(
         LowEnergy -> Map(
           Search   -> Seq((LowEnergy, beta, rewardSearch), (HighEnergy, 1 - beta, -3)),
           Recharge -> Seq((HighEnergy, 1, 0)),

@@ -21,9 +21,8 @@ import com.github.mlworthing.rl.Environment
 import scala.util.Random
 
 /**
-  * In a finite MDP environment, the sets of states, actions, and rewards
-  * all have a finite number of elements and its dynamics are given
-  * by a set of probabilities (complete transition graph).
+  * An MDP environment where the sets of states, actions, and rewards
+  * all have a finite number of elements.
   */
 trait FiniteEnvironment[State, Action] extends Environment[State, Action] {
 
@@ -32,39 +31,40 @@ trait FiniteEnvironment[State, Action] extends Environment[State, Action] {
   type Reward = Double
   type Probability = Double
 
-  type Response = (State, Probability, Reward)
-  type TransitionGraph = Map[State, Map[Action, Seq[Response]]]
+  type Transition = (State, Probability, Reward)
+
+  val states: Set[State]
+  val actions: State => Set[Action]
+  val transitions: State => Action => Seq[Transition]
 
   val initialStates: Seq[State]
   val terminalStates: Set[State]
-  val transitionGraph: TransitionGraph
 
   override def initial: (State, Set[Action], State) = {
     val state = initialStates(Random.nextInt(initialStates.size))
-    val actions = transitionGraph(state).keySet
-    (state, actions, state)
+    (state, actions(state), state)
   }
 
   final override def step(action: Action, frame: Frame): (Observation, Frame) = {
-    val possibleResponses: Seq[Response] = transitionGraph(frame)(action)
-    val (nextState, _, reward): Response = {
-      if (possibleResponses.isEmpty) (frame, 0d, 0d)
+    val possibleTransitions: Seq[Transition] = transitions(frame)(action)
+    val (nextState, _, reward): Transition = {
+      if (possibleTransitions.isEmpty) (frame, 0d, 0d)
       else {
         // select next state based on its probability
         val random = Random.nextDouble()
         var i = 0
-        var level = possibleResponses.head._2
+        var level = possibleTransitions.head._2
         while (random >= level) {
           i = i + 1
-          level = if (i == possibleResponses.size) {
+          level = if (i == possibleTransitions.size) {
             i = i - 1
             1d
-          } else level + possibleResponses(i)._2
+          } else level + possibleTransitions(i)._2
         }
-        possibleResponses(i)
+        possibleTransitions(i)
       }
     }
-    val nextActions = transitionGraph(nextState).keySet
+    val nextActions = actions(nextState)
     (Observation(nextState, reward, nextActions, terminalStates.contains(nextState)), nextState)
   }
 

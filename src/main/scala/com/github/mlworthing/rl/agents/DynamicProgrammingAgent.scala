@@ -42,15 +42,12 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
 
   override def solve(environment: FiniteEnvironment[State, Action]): Deterministic[State, Action] = {
 
-    val graph: environment.TransitionGraph = environment.transitionGraph
-
     println(environment.description)
 
     // first select random policy
-    val initialPolicy: Policy = graph.map {
-      case (state, actions) =>
-        (state, actions.keys.zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
-    }
+    val initialPolicy: Policy = environment.states.map { state =>
+      (state, environment.actions(state).zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
+    }.toMap
 
     printPolicy(s"Initial random policy:", initialPolicy, environment)
 
@@ -60,7 +57,7 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     var policyCounter = 0
 
     //initialize State-Value function to zero
-    val stateValue = mutable.Map(graph.keys.toSeq.map(s => (s, 0d)): _*)
+    val stateValue = mutable.Map(environment.states.toSeq.map(s => (s, 0d)): _*)
 
     do {
       currentPolicy = nextPolicy
@@ -82,23 +79,20 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
   def evaluatePolicy(
     environment: FiniteEnvironment[State, Action])(stateValue: StateValue, currentPolicy: Policy): (StateValue, Int) = {
 
-    val graph: environment.TransitionGraph = environment.transitionGraph
-    val states = graph.keys.toSeq
-
     var delta = 0d
     var counter = 0
 
     do {
       // for each possible state
-      for (state <- states) {
+      for (state <- environment.states) {
         val previousStateValue = stateValue(state)
         // initialize state value to be 0
         stateValue(state) = 0d
         // then follow the actual policy
-        val possibleResponses: Seq[(State, Probability, Reward)] =
-          currentPolicy.get(state).map(m => graph(state)(m)).getOrElse(Seq.empty)
-        // for each possible response
-        for ((nextState, probability, reward) <- possibleResponses) {
+        val possibleTransitions: Seq[(State, Probability, Reward)] =
+          currentPolicy.get(state).map(m => environment.transitions(state)(m)).getOrElse(Seq.empty)
+        // for each possible transition
+        for ((nextState, probability, reward) <- possibleTransitions) {
           val value =
             if (environment.terminalStates.contains(nextState)) reward
             else reward + gamma * stateValue(nextState)
@@ -116,27 +110,22 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
   def improvePolicy(
     environment: FiniteEnvironment[State, Action])(stateValue: StateValue, currentPolicy: Policy): Policy = {
 
-    val graph: environment.TransitionGraph = environment.transitionGraph
-    val states = graph.keys.toSeq
     var stable = true
-
     var nextPolicy: Policy = Map.empty
 
     // initialize state-action values to zero
     val stateActionValue = mutable.Map[State, mutable.Map[Action, Reward]]()
-    for (state <- states) {
-      val actions = graph(state).keys
-      stateActionValue(state) = mutable.Map(actions.toSeq.map(a => (a, 0d)): _*)
+    for (state <- environment.states) {
+      stateActionValue(state) = mutable.Map(environment.actions(state).toSeq.map(a => (a, 0d)): _*)
     }
 
     // then for each possible state
-    for (state <- states) {
-      val actions = graph(state).keys
+    for (state <- environment.states) {
       val actionValues = stateActionValue(state)
       // loop through all actions available
-      for (action <- actions) {
-        // and for each possible response
-        for ((nextState, probability, reward) <- graph(state)(action)) {
+      for (action <- environment.actions(state)) {
+        // and for each possible transition
+        for ((nextState, probability, reward) <- environment.transitions(state)(action)) {
           val value =
             if (environment.terminalStates.contains(nextState)) reward
             else reward + gamma * stateValue(nextState)
