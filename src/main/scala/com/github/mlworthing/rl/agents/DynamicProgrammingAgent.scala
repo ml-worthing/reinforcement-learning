@@ -26,9 +26,9 @@ import scala.util.Random
 /**
   * A MDP Agent applying dynamic programming (tabular) method.
   * Requires a complete and accurate model of the environment.
-  * @param gamma action reward decay
+  * @param gamma future reward discount factor
   * @param theta convergence threshold
-  * @param maxIterations max number of episodes
+  * @param maxIterations max number of iterations
   * @tparam State states represents anything we can know that might be useful in making decisions
   * @tparam Action actions represents decisions we want to learn how to make
   */
