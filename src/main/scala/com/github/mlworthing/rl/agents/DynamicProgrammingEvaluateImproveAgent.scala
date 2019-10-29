@@ -32,7 +32,10 @@ import scala.util.Random
   * @tparam State states represents anything we can know that might be useful in making decisions
   * @tparam Action actions represents decisions we want to learn how to make
   */
-final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
+final class DynamicProgrammingEvaluateImproveAgent[State, Action](
+  gamma: Double = 1d,
+  theta: Double = 1e-10,
+  maxIterations: Int = 100)
     extends Agent[State, Action, FiniteEnvironment[State, Action]] with Printer {
 
   type Reward = Double
@@ -40,7 +43,7 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
   type StateValue = mutable.Map[State, Reward]
   type Policy = Map[State, Action]
 
-  override def solve(environment: FiniteEnvironment[State, Action]): Deterministic[State, Action] = {
+  def solve(environment: FiniteEnvironment[State, Action]): Deterministic[State, Action] = {
 
     println(environment.description)
 
@@ -54,6 +57,7 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     var currentPolicy = initialPolicy
     var nextPolicy = initialPolicy
 
+    var globalCounter = 0
     var policyCounter = 0
 
     //initialize State-Value function to zero
@@ -63,8 +67,9 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
       currentPolicy = nextPolicy
 
       val (nextStateValue, counter) = evaluatePolicy(environment)(stateValue, currentPolicy)
+      globalCounter = globalCounter + counter
 
-      printStateValue(s"State-value function after $counter iterations converged to:", stateValue, environment)
+      printStateValue(s"State-value function after $globalCounter iterations converged to:", stateValue, environment)
 
       nextPolicy = improvePolicy(environment)(nextStateValue, currentPolicy)
       policyCounter = policyCounter + 1
@@ -83,6 +88,7 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     var counter = 0
 
     do {
+      delta = 0d
       // for each possible state
       for (state <- environment.states) {
         val previousStateValue = stateValue(state)
