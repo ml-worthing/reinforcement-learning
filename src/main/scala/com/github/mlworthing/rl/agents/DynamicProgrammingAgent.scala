@@ -42,50 +42,51 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
 
   override def solve(environment: FiniteEnvironment[State, Action]): Deterministic[State, Action] = {
 
-    val P: environment.TransitionGraph = environment.transitionGraph
+    val graph: environment.TransitionGraph = environment.transitionGraph
 
     println(environment.description)
 
     // first select random policy
-    val initialPolicy: Policy = P.map {
-      case (state, actionsMap) =>
-        (state, actionsMap.keys.zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
+    val initialPolicy: Policy = graph.map {
+      case (state, actions) =>
+        (state, actions.keys.zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
     }
 
     printPolicy(s"Initial random policy:", initialPolicy, environment)
 
-    var policy = initialPolicy
+    var currentPolicy = initialPolicy
     var nextPolicy = initialPolicy
 
     var policyCounter = 0
 
-    do {
-      policy = nextPolicy
+    //initialize State-Value function to zero
+    val stateValue = mutable.Map(graph.keys.toSeq.map(s => (s, 0d)): _*)
 
-      val (stateValue, counter) = evaluatePolicy(environment)(policy)
+    do {
+      currentPolicy = nextPolicy
+
+      val (nextStateValue, counter) = evaluatePolicy(environment)(stateValue, currentPolicy)
 
       printStateValue(s"State-value function after $counter iterations converged to:", stateValue, environment)
 
-      nextPolicy = improvePolicy(environment)(stateValue)
+      nextPolicy = improvePolicy(environment)(nextStateValue, currentPolicy)
       policyCounter = policyCounter + 1
 
       printPolicy(s"Improved policy no. $policyCounter:", nextPolicy, environment)
 
-    } while (policy != nextPolicy)
+    } while (nextPolicy ne currentPolicy)
 
     Deterministic(nextPolicy)
   }
 
-  def evaluatePolicy(environment: FiniteEnvironment[State, Action])(policy: Policy): (StateValue, Int) = {
+  def evaluatePolicy(
+    environment: FiniteEnvironment[State, Action])(stateValue: StateValue, currentPolicy: Policy): (StateValue, Int) = {
 
-    val P: environment.TransitionGraph = environment.transitionGraph
-    val states = P.keys.toSeq
+    val graph: environment.TransitionGraph = environment.transitionGraph
+    val states = graph.keys.toSeq
 
     var delta = 0d
     var counter = 0
-
-    //initialize State-Value function to zero
-    val stateValue = mutable.Map(P.keys.toSeq.map(s => (s, 0d)): _*)
 
     do {
       // for each possible state
@@ -95,7 +96,7 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
         stateValue(state) = 0d
         // then follow the actual policy
         val possibleResponses: Seq[(State, Probability, Reward)] =
-          policy.get(state).map(m => P(state)(m)).getOrElse(Seq.empty)
+          currentPolicy.get(state).map(m => graph(state)(m)).getOrElse(Seq.empty)
         // for each possible response
         for ((nextState, probability, reward) <- possibleResponses) {
           val value =
@@ -112,28 +113,30 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     (stateValue, counter)
   }
 
-  def improvePolicy(environment: FiniteEnvironment[State, Action])(stateValue: StateValue): Policy = {
+  def improvePolicy(
+    environment: FiniteEnvironment[State, Action])(stateValue: StateValue, currentPolicy: Policy): Policy = {
 
-    val P: environment.TransitionGraph = environment.transitionGraph
-    val states = P.keys.toSeq
+    val graph: environment.TransitionGraph = environment.transitionGraph
+    val states = graph.keys.toSeq
+    var stable = true
 
     var nextPolicy: Policy = Map.empty
 
     // initialize state-action values to zero
     val stateActionValue = mutable.Map[State, mutable.Map[Action, Reward]]()
     for (state <- states) {
-      val actions = P(state).keys
+      val actions = graph(state).keys
       stateActionValue(state) = mutable.Map(actions.toSeq.map(a => (a, 0d)): _*)
     }
 
     // then for each possible state
     for (state <- states) {
-      val actions = P(state).keys
+      val actions = graph(state).keys
       val actionValues = stateActionValue(state)
       // loop through all actions available
       for (action <- actions) {
         // and for each possible response
-        for ((nextState, probability, reward) <- P(state)(action)) {
+        for ((nextState, probability, reward) <- graph(state)(action)) {
           val value =
             if (environment.terminalStates.contains(nextState)) reward
             else reward + gamma * stateValue(nextState)
@@ -145,9 +148,10 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
       val actionSelected = actionValues.maxBy(_._2)._1
       // and update policy
       nextPolicy = nextPolicy.updated(state, actionSelected)
+      stable = stable && currentPolicy(state) == actionSelected
     }
 
-    nextPolicy
+    if (stable) currentPolicy else nextPolicy
   }
 
 }
