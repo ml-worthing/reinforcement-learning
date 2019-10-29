@@ -62,11 +62,11 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     do {
       policy = nextPolicy
 
-      val (v, counter) = evaluatePolicy(environment)(policy)
+      val (stateValue, counter) = evaluatePolicy(environment)(policy)
 
-      printStateValue(s"State-value function after $counter iterations converged to:", v, environment)
+      printStateValue(s"State-value function after $counter iterations converged to:", stateValue, environment)
 
-      nextPolicy = improvePolicy(environment)(v)
+      nextPolicy = improvePolicy(environment)(stateValue)
       policyCounter = policyCounter + 1
 
       printPolicy(s"Improved policy no. $policyCounter:", nextPolicy, environment)
@@ -85,14 +85,14 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     var counter = 0
 
     //initialize State-Value function to zero
-    val stateValues = mutable.Map(P.keys.toSeq.map(s => (s, 0d)): _*)
+    val stateValue = mutable.Map(P.keys.toSeq.map(s => (s, 0d)): _*)
 
     do {
       // for each possible state
       for (state <- states) {
-        val previousStateValue = stateValues(state)
+        val previousStateValue = stateValue(state)
         // initialize state value to be 0
-        stateValues(state) = 0d
+        stateValue(state) = 0d
         // then follow the actual policy
         val possibleResponses: Seq[(State, Probability, Reward)] =
           policy.get(state).map(m => P(state)(m)).getOrElse(Seq.empty)
@@ -100,19 +100,19 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
         for ((nextState, probability, reward) <- possibleResponses) {
           val value =
             if (environment.terminalStates.contains(nextState)) reward
-            else reward + gamma * stateValues(nextState)
+            else reward + gamma * stateValue(nextState)
           // and update the state value
-          stateValues(state) = stateValues(state) + probability * value
-          delta = Math.max(delta, previousStateValue - stateValues(state))
+          stateValue(state) = stateValue(state) + probability * value
+          delta = Math.max(delta, previousStateValue - stateValue(state))
         }
       }
       counter = counter + 1
     } while (delta > theta && counter < maxIterations)
 
-    (stateValues, counter)
+    (stateValue, counter)
   }
 
-  def improvePolicy(environment: FiniteEnvironment[State, Action])(V: StateValue): Policy = {
+  def improvePolicy(environment: FiniteEnvironment[State, Action])(stateValue: StateValue): Policy = {
 
     val P: environment.TransitionGraph = environment.transitionGraph
     val states = P.keys.toSeq
@@ -120,23 +120,23 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     var nextPolicy: Policy = Map.empty
 
     // initialize state-action values to zero
-    val stateActionValues = mutable.Map[State, mutable.Map[Action, Reward]]()
+    val stateActionValue = mutable.Map[State, mutable.Map[Action, Reward]]()
     for (state <- states) {
       val actions = P(state).keys
-      stateActionValues(state) = mutable.Map(actions.toSeq.map(a => (a, 0d)): _*)
+      stateActionValue(state) = mutable.Map(actions.toSeq.map(a => (a, 0d)): _*)
     }
 
     // then for each possible state
     for (state <- states) {
       val actions = P(state).keys
-      val actionValues = stateActionValues(state)
+      val actionValues = stateActionValue(state)
       // loop through all actions available
       for (action <- actions) {
         // and for each possible response
         for ((nextState, probability, reward) <- P(state)(action)) {
           val value =
             if (environment.terminalStates.contains(nextState)) reward
-            else reward + gamma * V(nextState)
+            else reward + gamma * stateValue(nextState)
           // update action value
           actionValues(action) = actionValues(action) + probability * value
         }
