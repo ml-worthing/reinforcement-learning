@@ -2,13 +2,16 @@ package com.github.mlworthing.rl.environments
 
 /**
   * Special case of finite environment where its dynamics are given by
-  * a static set of transitions (complete and static transition graph)
+  * a static set of transitions (complete and static transition graph).
   */
 trait StaticFiniteEnvironment[State, Action] extends FiniteEnvironment[State, Action] {
 
   type TransitionGraph = Map[State, Map[Action, Seq[Transition]]]
-
   val transitionGraph: TransitionGraph
+
+  type Frame = State
+  final def stateOf(frame: Frame): State = frame
+  final def nextFrame(nextState: State, previousFrame: Option[Frame]): Frame = nextState
 
   override lazy val states: Set[State] = transitionGraph.keySet
   override lazy val actions: State => Set[Action] = transitionGraph(_).keySet

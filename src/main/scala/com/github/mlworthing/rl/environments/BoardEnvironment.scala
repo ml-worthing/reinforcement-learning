@@ -54,7 +54,7 @@ trait BoardEnvironment[State, Action] extends StaticFiniteEnvironment[State, Act
   val (transitionGraph, initialStates, terminalStates) = parseLayout
 
   /** Parses square tiles board */
-  private def parseLayout: (TransitionGraph, Seq[State], Set[State]) = {
+  private def parseLayout: (TransitionGraph, Set[State], Set[State]) = {
 
     def fit(i: Int, minInc: Int, maxExc: Int): Int = if (i < minInc) minInc else if (i >= maxExc) maxExc - 1 else i
 
@@ -91,7 +91,7 @@ trait BoardEnvironment[State, Action] extends StaticFiniteEnvironment[State, Act
         }
     }
 
-    (board, initialStates, terminalStates.toSet)
+    (board, initialStates.toSet, terminalStates.toSet)
   }
 
   override def description: String = layout

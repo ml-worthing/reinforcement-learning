@@ -26,8 +26,6 @@ import scala.util.Random
   */
 trait FiniteEnvironment[State, Action] extends Environment[State, Action] {
 
-  type Frame = State
-
   type Reward = Double
   type Probability = Double
 
@@ -37,18 +35,21 @@ trait FiniteEnvironment[State, Action] extends Environment[State, Action] {
   val actions: State => Set[Action]
   val transitions: State => Action => Seq[Transition]
 
-  val initialStates: Seq[State]
+  val initialStates: Set[State]
   val terminalStates: Set[State]
 
-  override def initial: (State, Set[Action], State) = {
-    val state = initialStates(Random.nextInt(initialStates.size))
-    (state, actions(state), state)
+  def stateOf(frame: Frame): State
+  def nextFrame(nextState: State, previousFrame: Option[Frame]): Frame
+
+  override def initial: (State, Set[Action], Frame) = {
+    val state = initialStates.toSeq(Random.nextInt(initialStates.size))
+    (state, actions(state), nextFrame(state, None))
   }
 
   final override def step(action: Action, frame: Frame): (Observation, Frame) = {
-    val possibleTransitions: Seq[Transition] = transitions(frame)(action)
+    val possibleTransitions: Seq[Transition] = transitions(stateOf(frame))(action)
     val (nextState, _, reward): Transition = {
-      if (possibleTransitions.isEmpty) (frame, 0d, 0d)
+      if (possibleTransitions.isEmpty) (stateOf(frame), 0d, 0d)
       else {
         // select next state based on its probability
         val random = Random.nextDouble()
@@ -65,7 +66,7 @@ trait FiniteEnvironment[State, Action] extends Environment[State, Action] {
       }
     }
     val nextActions = actions(nextState)
-    (Observation(nextState, reward, nextActions, terminalStates.contains(nextState)), nextState)
+    (Observation(nextState, reward, nextActions, terminalStates.contains(nextState)), nextFrame(nextState, Some(frame)))
   }
 
 }

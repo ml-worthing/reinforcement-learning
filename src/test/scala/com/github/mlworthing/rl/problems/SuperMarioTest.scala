@@ -18,16 +18,17 @@ package com.github.mlworthing.rl.problems
 
 import com.github.mlworthing.rl.agents.DynamicProgrammingAgent
 import com.github.mlworthing.rl.utils.PolicyExecutor
-import org.scalatest.{FreeSpec, Matchers}
+import com.github.mlworthing.rlai.utils.UnitSpec
 
-class SuperMarioTest extends FreeSpec with Matchers {
+class SuperMarioTest extends UnitSpec {
 
   "evaluate a policy for a Super Mario using AgentMDPDynamicProgramming" in {
 
     val agent = new DynamicProgrammingAgent[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
     val policy = agent.solve(SuperMario)
 
-    PolicyExecutor.execute(policy, SuperMario, maxIterations = 1000, numberOfSamples = 1000)
+    val result = PolicyExecutor.execute(policy, SuperMario, maxIterations = 1000, numberOfSamples = 1000)
+    result.getOrElse(1.0, 0) should be > 0 withClue ": all of policy executions have failed to reach the goal"
 
   }
 }

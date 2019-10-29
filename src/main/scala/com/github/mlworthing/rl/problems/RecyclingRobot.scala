@@ -26,13 +26,13 @@ object RecyclingRobot {
     rewardWait: Double): StaticFiniteEnvironment[State, Action] =
     new StaticFiniteEnvironment[State, Action] {
 
-      final override def description: String =
+      override def description: String =
         "The mobile robot having 2 states (low,high energy) and 3 possible actions (search, wait, recharge)."
 
-      final override val initialStates: Seq[State] = Seq(HighEnergy)
-      final override val terminalStates: Set[State] = Set()
+      override val initialStates: Set[State] = Set(HighEnergy)
+      override val terminalStates: Set[State] = Set()
 
-      final override val transitionGraph: TransitionGraph = Map(
+      override val transitionGraph: TransitionGraph = Map(
         LowEnergy -> Map(
           Search   -> Seq((LowEnergy, beta, rewardSearch), (HighEnergy, 1 - beta, -3)),
           Recharge -> Seq((HighEnergy, 1, 0)),

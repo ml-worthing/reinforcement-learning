@@ -28,7 +28,8 @@ class FrozenLakeTest extends UnitSpec {
     val agent = new DynamicProgrammingAgent[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
     val policy: Deterministic[Int, String] = agent.solve(FrozenLake)
 
-    PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
+    val result = PolicyExecutor.execute(policy, FrozenLake, maxIterations = 1000, numberOfSamples = 1000)
+    result.getOrElse(1.0, 0) should be > 0 withClue ": all of policy executions have failed to reach the goal"
   }
 
   "evaluate a policy for a Frozen Lake using AgentMDP" ignore {

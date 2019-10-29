@@ -98,7 +98,7 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
             else reward + gamma * stateValue(nextState)
           // and update the state value
           stateValue(state) = stateValue(state) + probability * value
-          delta = Math.max(delta, previousStateValue - stateValue(state))
+          delta = Math.max(delta, Math.abs(previousStateValue - stateValue(state)))
         }
       }
       counter = counter + 1
