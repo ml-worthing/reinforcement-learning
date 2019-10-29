@@ -26,13 +26,13 @@ import scala.util.Random
 /**
   * A MDP Agent applying dynamic programming (tabular) method.
   * Requires a complete and accurate model of the environment.
-  * @param gamma future reward discount factor
-  * @param theta convergence threshold
+  * @param gamma future rewards discount factor
+  * @param theta state-value convergence threshold
   * @param maxIterations max number of iterations
   * @tparam State states represents anything we can know that might be useful in making decisions
   * @tparam Action actions represents decisions we want to learn how to make
   */
-class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
+final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
     extends Agent[State, Action, FiniteEnvironment[State, Action]] with Printer {
 
   type Reward = Double
@@ -71,7 +71,7 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
 
       printPolicy(s"Improved policy no. $policyCounter:", nextPolicy, environment)
 
-    } while (!isStable(policy, nextPolicy))
+    } while (policy != nextPolicy)
 
     Deterministic(nextPolicy)
   }
@@ -88,31 +88,25 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
     val V = mutable.Map(P.keys.toSeq.map(s => (s, 0d)): _*)
 
     do {
-
-      val old_V = copy(V)
-
       // for each possible state
       for (state <- states) {
+        val previousStateValue = V(state)
         // initialize state value to be 0
         V(state) = 0d
-        // then move following the actual policy
-        val moves: Seq[(State, Probability, Reward)] =
+        // then follow the actual policy
+        val possibleResponses: Seq[(State, Probability, Reward)] =
           policy.get(state).map(m => P(state)(m)).getOrElse(Seq.empty)
-
-        for ((nextState, probability, reward) <- moves) {
-          val value =
+        // for each possible response
+        for ((nextState, probability, reward) <- possibleResponses) {
+          val nextValue =
             if (environment.terminalStates.contains(nextState)) reward
-            else reward + gamma * old_V(nextState)
-
-          // update the state value
-          V(state) = V(state) + probability * value
+            else reward + gamma * V(nextState)
+          // and update the state value
+          V(state) = V(state) + probability * nextValue
+          delta = Math.max(delta, previousStateValue - V(state))
         }
-
-        delta = Math.abs(difference(old_V, V))
       }
-
       counter = counter + 1
-
     } while (delta > theta && counter < maxIterations)
 
     (V, counter)
@@ -147,12 +141,5 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
 
     newPolicy
   }
-
-  def isStable(policy: Policy, newPolicy: Policy): Boolean = policy == newPolicy
-
-  def difference(m1: StateValue, m2: StateValue): Double =
-    m1.map { case (k, v) => v - m2(k) }.toSeq.sum
-
-  def copy[K, V](map: mutable.Map[K, V]): mutable.Map[K, V] = mutable.Map(map.toSeq: _*)
 
 }
