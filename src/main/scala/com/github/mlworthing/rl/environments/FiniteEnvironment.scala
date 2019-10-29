@@ -22,7 +22,7 @@ import scala.util.Random
 
 /**
   * In a finite MDP environment, the sets of states, actions, and rewards
-  * all have a finite number of elements and that its dynamics are given
+  * all have a finite number of elements and its dynamics are given
   * by a set of probabilities (complete transition graph).
   */
 trait FiniteEnvironment[State, Action] extends Environment[State, Action] {

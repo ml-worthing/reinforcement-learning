@@ -17,7 +17,7 @@
 package com.github.mlworthing.rl
 package agents
 
-import com.github.mlworthing.rl.environments.BoardEnvironment
+import com.github.mlworthing.rl.environments.FiniteEnvironment
 import com.github.mlworthing.rl.utils.Printer
 
 import scala.collection.mutable
@@ -33,18 +33,18 @@ import scala.util.Random
   * @tparam Action actions represents decisions we want to learn how to make
   */
 class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIterations: Int = 100)
-    extends Agent[State, Action, BoardEnvironment[State, Action]] with Printer {
+    extends Agent[State, Action, FiniteEnvironment[State, Action]] with Printer {
 
   type Reward = Double
   type Probability = Double
   type StateValue = mutable.Map[State, Reward]
   type Policy = Map[State, Action]
 
-  override def solve(environment: BoardEnvironment[State, Action]): Deterministic[State, Action] = {
+  override def solve(environment: FiniteEnvironment[State, Action]): Deterministic[State, Action] = {
 
     val P: environment.TransitionGraph = environment.transitionGraph
 
-    println(environment.layout)
+    println(environment.description)
 
     // first select random policy
     val initialPolicy: Policy = P.map {
@@ -76,7 +76,7 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
     Deterministic(nextPolicy)
   }
 
-  def evaluatePolicy(environment: BoardEnvironment[State, Action])(policy: Policy): (StateValue, Int) = {
+  def evaluatePolicy(environment: FiniteEnvironment[State, Action])(policy: Policy): (StateValue, Int) = {
 
     val P: environment.TransitionGraph = environment.transitionGraph
     val states = P.keys.toSeq
@@ -118,7 +118,7 @@ class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Double =
     (V, counter)
   }
 
-  def improvePolicy(environment: BoardEnvironment[State, Action])(V: StateValue): Policy = {
+  def improvePolicy(environment: FiniteEnvironment[State, Action])(V: StateValue): Policy = {
 
     val P: environment.TransitionGraph = environment.transitionGraph
     val states = P.keys.toSeq
