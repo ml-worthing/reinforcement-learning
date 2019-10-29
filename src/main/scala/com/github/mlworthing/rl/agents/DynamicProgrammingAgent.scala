@@ -85,31 +85,31 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     var counter = 0
 
     //initialize State-Value function to zero
-    val V = mutable.Map(P.keys.toSeq.map(s => (s, 0d)): _*)
+    val stateValues = mutable.Map(P.keys.toSeq.map(s => (s, 0d)): _*)
 
     do {
       // for each possible state
       for (state <- states) {
-        val previousStateValue = V(state)
+        val previousStateValue = stateValues(state)
         // initialize state value to be 0
-        V(state) = 0d
+        stateValues(state) = 0d
         // then follow the actual policy
         val possibleResponses: Seq[(State, Probability, Reward)] =
           policy.get(state).map(m => P(state)(m)).getOrElse(Seq.empty)
         // for each possible response
         for ((nextState, probability, reward) <- possibleResponses) {
-          val nextValue =
+          val value =
             if (environment.terminalStates.contains(nextState)) reward
-            else reward + gamma * V(nextState)
+            else reward + gamma * stateValues(nextState)
           // and update the state value
-          V(state) = V(state) + probability * nextValue
-          delta = Math.max(delta, previousStateValue - V(state))
+          stateValues(state) = stateValues(state) + probability * value
+          delta = Math.max(delta, previousStateValue - stateValues(state))
         }
       }
       counter = counter + 1
     } while (delta > theta && counter < maxIterations)
 
-    (V, counter)
+    (stateValues, counter)
   }
 
   def improvePolicy(environment: FiniteEnvironment[State, Action])(V: StateValue): Policy = {
@@ -117,29 +117,37 @@ final class DynamicProgrammingAgent[State, Action](gamma: Double = 1d, theta: Do
     val P: environment.TransitionGraph = environment.transitionGraph
     val states = P.keys.toSeq
 
-    var newPolicy: Policy = Map.empty
+    var nextPolicy: Policy = Map.empty
 
-    // for each possible state
+    // initialize state-action values to zero
+    val stateActionValues = mutable.Map[State, mutable.Map[Action, Reward]]()
     for (state <- states) {
       val actions = P(state).keys
-      // initialize action value function to zero
-      val Qs = mutable.Map(actions.toSeq.map(a => (a, 0d)): _*)
-      // and loop through all actions available
-      for (action <- actions) {
-        for ((newState, probability, reward) <- P(state)(action)) {
-          val value =
-            if (environment.terminalStates.contains(newState)) reward
-            else reward + gamma * V(newState)
-          // calculate action value function for all actions in this state
-          Qs(action) = Qs(action) + probability * value
-        }
-      }
-      // select max action in this state
-      val actionSelected = Qs.maxBy(_._2)._1
-      newPolicy = newPolicy.updated(state, actionSelected)
+      stateActionValues(state) = mutable.Map(actions.toSeq.map(a => (a, 0d)): _*)
     }
 
-    newPolicy
+    // then for each possible state
+    for (state <- states) {
+      val actions = P(state).keys
+      val actionValues = stateActionValues(state)
+      // loop through all actions available
+      for (action <- actions) {
+        // and for each possible response
+        for ((nextState, probability, reward) <- P(state)(action)) {
+          val value =
+            if (environment.terminalStates.contains(nextState)) reward
+            else reward + gamma * V(nextState)
+          // update action value
+          actionValues(action) = actionValues(action) + probability * value
+        }
+      }
+      // then select an action producing max value in this state
+      val actionSelected = actionValues.maxBy(_._2)._1
+      // and update policy
+      nextPolicy = nextPolicy.updated(state, actionSelected)
+    }
+
+    nextPolicy
   }
 
 }
