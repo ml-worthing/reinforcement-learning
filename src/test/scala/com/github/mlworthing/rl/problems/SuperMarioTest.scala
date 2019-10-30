@@ -16,7 +16,7 @@
 
 package com.github.mlworthing.rl.problems
 
-import com.github.mlworthing.rl.agents.{DynamicProgrammingEvaluateImproveAgent, DynamicProgrammingValueIterationAgent}
+import com.github.mlworthing.rl.agents.{DynamicProgrammingEvaluateImproveAgent, DynamicProgrammingValueIterationDeterministicAgent}
 import com.github.mlworthing.rl.utils.PolicyExecutor
 import com.github.mlworthing.rlai.utils.UnitSpec
 
@@ -36,7 +36,10 @@ class SuperMarioTest extends UnitSpec {
   "evaluate a policy for a Super Mario using DynamicProgrammingValueIterationAgent" in {
 
     val agent =
-      new DynamicProgrammingValueIterationAgent[Int, String](gamma = 0.9d, theta = 0.01d, maxIterations = 100)
+      new DynamicProgrammingValueIterationDeterministicAgent[Int, String](
+        gamma = 0.9d,
+        theta = 0.01d,
+        maxIterations = 100)
     val policy = agent.solve(SuperMario)
 
     val result = PolicyExecutor.execute(policy, SuperMario, maxIterations = 1000, numberOfSamples = 1000)

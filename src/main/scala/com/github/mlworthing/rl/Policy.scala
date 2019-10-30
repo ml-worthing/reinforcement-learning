@@ -79,12 +79,12 @@ case class Deterministic[S, A](policy: Map[S, A]) extends Policy[S, A] {
 }
 
 /** The set of alternative actions to take given the current state with their respective probabilities */
-case class Probabilistic[S, A](policy: Map[S, Set[(A, Double)]]) extends Policy[S, A] {
+case class Stochastic[S, A](policy: Map[S, Map[A, Double]]) extends Policy[S, A] {
 
   lazy val mapStateToSortedListOfActionsWithUpperBounds: Map[S, List[(A, Double)]] = {
-    policy.mapValues(set => {
-      val weightSum = set.map(_._2).sum
-      val list = set.toSeq
+    policy.mapValues(actions => {
+      val weightSum = actions.values.sum
+      val list = actions.toSeq
         .sortBy(pair => -pair._2)
         .map { case (action, weight) => (action, weight / weightSum) }
         .foldLeft(List.empty[(A, Double)])((list, pair) =>

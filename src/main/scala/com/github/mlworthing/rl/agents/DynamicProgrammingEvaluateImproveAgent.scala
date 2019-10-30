@@ -52,7 +52,7 @@ final class DynamicProgrammingEvaluateImproveAgent[State, Action](
       (state, environment.actions(state).zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
     }.toMap
 
-    printPolicy(s"Initial random policy:", initialPolicy, environment)
+    printDeterministicPolicy(s"Initial random policy:", initialPolicy, environment)
 
     var currentPolicy = initialPolicy
     var nextPolicy = initialPolicy
@@ -74,7 +74,7 @@ final class DynamicProgrammingEvaluateImproveAgent[State, Action](
       nextPolicy = improvePolicy(environment)(nextStateValue, currentPolicy)
       policyCounter = policyCounter + 1
 
-      printPolicy(s"Improved policy no. $policyCounter:", nextPolicy, environment)
+      printDeterministicPolicy(s"Improved policy no. $policyCounter:", nextPolicy, environment)
 
     } while (nextPolicy ne currentPolicy)
 

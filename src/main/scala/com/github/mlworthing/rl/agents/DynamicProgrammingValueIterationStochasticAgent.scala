@@ -16,16 +16,16 @@
 
 package com.github.mlworthing.rl.agents
 
-import com.github.mlworthing.rl.{Agent, Deterministic}
 import com.github.mlworthing.rl.environments.FiniteEnvironment
 import com.github.mlworthing.rl.utils.Printer
+import com.github.mlworthing.rl.{Agent, Stochastic}
 
 import scala.collection.mutable
-import scala.util.Random
 
 /**
-  * A MDP Agent applying dynamic programming (tabular) value iteration method.
+  * MDP Agent applying dynamic programming (tabular) value iteration method.
   * Requires a complete and accurate model of the environment.
+  * Calculates stochastic policy.
   *
   * @param gamma future rewards discount factor
   * @param theta state-value convergence threshold
@@ -33,7 +33,7 @@ import scala.util.Random
   * @tparam State states represents anything we can know that might be useful in making decisions
   * @tparam Action actions represents decisions we want to learn how to make
   */
-final class DynamicProgrammingValueIterationAgent[State, Action](
+final class DynamicProgrammingValueIterationStochasticAgent[State, Action](
   gamma: Double = 1d,
   theta: Double = 1e-10,
   maxIterations: Int = 100)
@@ -42,9 +42,9 @@ final class DynamicProgrammingValueIterationAgent[State, Action](
   type Reward = Double
   type Probability = Double
   type StateValue = mutable.Map[State, Reward]
-  type Policy = Map[State, Action]
+  type Policy = mutable.Map[State, mutable.Map[Action, Double]]
 
-  def solve(environment: FiniteEnvironment[State, Action]): Deterministic[State, Action] = {
+  def solve(environment: FiniteEnvironment[State, Action]): Stochastic[State, Action] = {
 
     println(environment.description)
 
@@ -53,9 +53,11 @@ final class DynamicProgrammingValueIterationAgent[State, Action](
     var policyCounter = 0
 
     // first select random policy
-    var policy: Policy = environment.states.map { state =>
-      (state, environment.actions(state).zip(Stream.continually(Random.nextDouble())).minBy(_._2)._1)
-    }.toMap
+    var policy: Policy = mutable.Map(environment.states.map { state =>
+      (state, mutable.Map(environment.actions(state).map(a => (a, 1d / environment.actions(state).size)).toSeq: _*))
+    }.toSeq: _*)
+
+    printStochasticPolicy(s"Initial policy:", policy, environment)
 
     //initialize state values to zero
     val stateValue = mutable.Map(environment.states.toSeq.map(s => (s, 0d)): _*)
@@ -72,24 +74,24 @@ final class DynamicProgrammingValueIterationAgent[State, Action](
       // then for each possible state
       for (state <- environment.states) {
         val previousStateValue = stateValue(state)
-        val actionValues = stateActionValue(state)
+        val actionValue = stateActionValue(state)
         // loop through all actions available
         for (action <- environment.actions(state)) {
-          actionValues(action) = 0d
+          actionValue(action) = 0d
           // and for each possible transition
           for ((nextState, probability, reward) <- environment.transitions(state)(action)) {
             val value =
               if (environment.terminalStates.contains(nextState)) reward
               else reward + gamma * stateValue(nextState)
             // update action value
-            actionValues(action) = actionValues(action) + probability * value
+            actionValue(action) = actionValue(action) + probability * value
           }
         }
-        // then select an action producing max value in this state
-        val actionSelected = actionValues.maxBy(_._2)._1
-        stable = stable && policy(state) == actionSelected
-        policy = policy.updated(state, actionSelected)
-        stateValue(state) = actionValues(actionSelected)
+        // then prefer actions producing max value in this state
+        val (maxActionValue, isStable) = updateActionPreferences(actionValue, policy(state), 1e-10)
+        stable = stable && isStable
+        // and update state value
+        stateValue(state) = maxActionValue
         delta = Math.max(delta, Math.abs(previousStateValue - stateValue(state)))
       }
 
@@ -97,7 +99,7 @@ final class DynamicProgrammingValueIterationAgent[State, Action](
       if (!stable) {
         policyCounter = policyCounter + 1
         printStateValue(s"State-value function after $counter iterations:", stateValue, environment)
-        printPolicy(s"Improved policy no. $policyCounter:", policy, environment)
+        printStochasticPolicy(s"Improved policy no. $policyCounter:", policy, environment)
       }
 
     } while (delta > theta && counter < maxIterations)
@@ -107,9 +109,25 @@ final class DynamicProgrammingValueIterationAgent[State, Action](
       stateValue,
       environment)
 
-    printPolicy(s"Final policy no. $policyCounter:", policy, environment)
+    printStochasticPolicy(s"Final policy no. $policyCounter:", policy, environment)
 
-    Deterministic(policy)
+    Stochastic(policy.mapValues(_.toMap).toMap)
+  }
+
+  def updateActionPreferences(
+    actionValue: mutable.Map[Action, Reward],
+    actionPreferences: mutable.Map[Action, Probability],
+    tolerance: Double): (Double, Boolean) = {
+    val max = actionValue.maxBy(_._2)._2
+    val count = actionValue.count { case (_, v) => Math.abs(max - v) < tolerance }
+    val probability = 1d / count
+    var stable = true
+    actionPreferences.keysIterator.foreach { a =>
+      val p = actionPreferences(a)
+      actionPreferences(a) = if (Math.abs(max - actionValue(a)) < tolerance) probability else 0d
+      stable = stable && actionPreferences(a) == p
+    }
+    (max, stable)
   }
 
 }

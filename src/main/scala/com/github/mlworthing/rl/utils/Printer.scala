@@ -20,7 +20,7 @@ import com.github.mlworthing.rl.Environment
 
 trait Printer {
 
-  def printPolicy[State, Action](
+  def printDeterministicPolicy[State, Action](
     headline: String,
     policy: scala.collection.Map[State, Action],
     environment: Environment[State, Action]): Unit = {
@@ -29,6 +29,25 @@ trait Printer {
     println(
       environment
         .show(policy.get, (_: State, action: Action) => action.toString, cellLength = 1, showForTerminalTiles = false))
+
+    println()
+  }
+
+  def printStochasticPolicy[State, Action](
+    headline: String,
+    policy: scala.collection.Map[State, scala.collection.Map[Action, Double]],
+    environment: Environment[State, Action]): Unit = {
+    val actionsCount = policy.map(_._2.size).max
+    println(headline)
+    println()
+    println(
+      environment
+        .show[scala.collection.Map[Action, Double]](
+          policy.get,
+          (_: State, actions: scala.collection.Map[Action, Double]) => actions.filter(_._2 > 0).keys.mkString(""),
+          cellLength = actionsCount,
+          showForTerminalTiles = false
+        ))
 
     println()
   }

@@ -100,12 +100,12 @@ trait BoardEnvironment[State, Action] extends StaticFiniteEnvironment[State, Act
     values: State => Option[V],
     format: (State, V) => String,
     cellLength: Int,
-    showForTerminalTiles: Boolean): String =
+    showTerminalTiles: Boolean): String =
     (for ((row, r) <- tiles.zipWithIndex)
       yield
         (for ((tile, c) <- row.zipWithIndex)
           yield {
-            if ((isTerminal(tile) && !showForTerminalTiles) || !isAccessible(tile))
+            if ((isTerminal(tile) && !showTerminalTiles) || !isAccessible(tile))
               tile
             else
               values(stateAt(r, c))

@@ -38,7 +38,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
 
     val initialPolicy = createInitialPolicy(environment, knowledge)
 
-    printPolicy(s"Initial random policy:", initialPolicy, environment)
+    printDeterministicPolicy(s"Initial random policy:", initialPolicy, environment)
 
     var policy = initialPolicy
     var newPolicy = initialPolicy
@@ -55,7 +55,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
       newPolicy = improvePolicy(v, policy, knowledge)
       policyCounter = policyCounter + 1
 
-      printPolicy(s"Improved policy no. $policyCounter:", newPolicy, environment)
+      printDeterministicPolicy(s"Improved policy no. $policyCounter:", newPolicy, environment)
 
     } while (!isStable(policy, newPolicy) && policyCounter < maxIterations)
 
@@ -139,7 +139,7 @@ class AgentMDP[State, Action](gamma: Double = 1d, theta: Double = 1e-10, maxIter
       moves = evaluate(initialState, V, old_V, initialFrame, moves)
       delta = Math.abs(difference(V, old_V))
       iterations = iterations + 1
-      printPolicy(s"After $moves moves:", policy, environment)
+      printDeterministicPolicy(s"After $moves moves:", policy, environment)
       println(V)
       println(delta)
     } while (delta > theta && iterations < maxIterations)
