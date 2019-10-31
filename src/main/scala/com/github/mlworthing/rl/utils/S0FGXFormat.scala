@@ -24,9 +24,9 @@ trait S0FGXFormat {
     case _   => 0
   }
 
-  def isAccessible(tile: String): Boolean = tile != "X"
+  def canAccessTile(tile: String): Boolean = tile != "X"
 
-  def isStart(tile: String): Boolean = tile == "S"
+  def isStartTile(tile: String): Boolean = tile == "S"
 
-  def isTerminal(tile: String): Boolean = tile == "F" || tile == "G"
+  def isTerminalTile(tile: String): Boolean = tile == "F" || tile == "G"
 }

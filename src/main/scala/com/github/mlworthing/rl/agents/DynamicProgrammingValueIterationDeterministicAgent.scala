@@ -80,7 +80,7 @@ final class DynamicProgrammingValueIterationDeterministicAgent[State, Action](
           // and for each possible transition
           for ((nextState, probability, reward) <- environment.transitions(state)(action)) {
             val value =
-              if (environment.terminalStates.contains(nextState)) reward
+              if (environment.isTerminalState(nextState)) reward
               else reward + gamma * stateValue(nextState)
             // update action value
             actionValue(action) = actionValue(action) + probability * value

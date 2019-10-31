@@ -81,17 +81,17 @@ final class DynamicProgrammingValueIterationStochasticAgent[State, Action](
           // and for each possible transition
           for ((nextState, probability, reward) <- environment.transitions(state)(action)) {
             val value =
-              if (environment.terminalStates.contains(nextState)) reward
+              if (environment.isTerminalState(nextState)) reward
               else reward + gamma * stateValue(nextState)
             // update action value
             actionValue(action) = actionValue(action) + probability * value
           }
         }
         // then prefer actions producing max value in this state
-        val (maxActionValue, isStable) = updateActionPreferences(actionValue, policy(state), 1e-10)
+        val (_, isStable) = updateActionPreferences(actionValue, policy(state), 1e-10)
         stable = stable && isStable
         // and update state value
-        stateValue(state) = maxActionValue
+        stateValue(state) = actionValue.map { case (a, r) => policy(state)(a) * r }.sum
         delta = Math.max(delta, Math.abs(previousStateValue - stateValue(state)))
       }
 

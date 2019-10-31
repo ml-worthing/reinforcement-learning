@@ -9,10 +9,6 @@ trait StaticFiniteEnvironment[State, Action] extends FiniteEnvironment[State, Ac
   type TransitionGraph = Map[State, Map[Action, Seq[Transition]]]
   val transitionGraph: TransitionGraph
 
-  type Frame = State
-  final def stateOf(frame: Frame): State = frame
-  final def nextFrame(nextState: State, previousFrame: Option[Frame]): Frame = nextState
-
   override lazy val states: Set[State] = transitionGraph.keySet
   override lazy val actions: State => Set[Action] = transitionGraph(_).keySet
   override lazy val transitions: State => Action => Seq[(State, Probability, Reward)] = transitionGraph

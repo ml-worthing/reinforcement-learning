@@ -47,11 +47,13 @@ trait BoardEnvironment[State, Action] extends StaticFiniteEnvironment[State, Act
   def positionOf(state: State): (Int, Int)
 
   def rewardFor(tile: String): Reward
-  def isAccessible(tile: String): Boolean
-  def isStart(tile: String): Boolean
-  def isTerminal(tile: String): Boolean
+  def canAccessTile(tile: String): Boolean
+  def isStartTile(tile: String): Boolean
+  def isTerminalTile(tile: String): Boolean
 
   val (transitionGraph, initialStates, terminalStates) = parseLayout
+
+  override def isTerminalState(state: State): Boolean = terminalStates.contains(state)
 
   /** Parses square tiles board */
   private def parseLayout: (TransitionGraph, Set[State], Set[State]) = {
@@ -62,21 +64,22 @@ trait BoardEnvironment[State, Action] extends StaticFiniteEnvironment[State, Act
       val target =
         (fit(position._1 + move._1, 0, tiles.length), fit(position._2 + move._2, 0, tiles(position._1).length))
       val tile = tileAt(target)
-      if (isAccessible(tile)) {
+      if (canAccessTile(tile)) {
         val reward = rewardFor(tile)
         val state = stateAt(target._1, target._2)
         Some((state, probability, reward))
       } else None
     }
 
-    val initialStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isStart(tail)     => stateAt(r, c) }.toSeq
-    val terminalStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isTerminal(tail) => stateAt(r, c) }.toSeq
+    val initialStates: Seq[State] = tileAt.collect { case ((r, c), tail) if isStartTile(tail) => stateAt(r, c) }.toSeq
+    val terminalStates
+      : Seq[State] = tileAt.collect { case ((r, c), tail) if isTerminalTile(tail) => stateAt(r, c) }.toSeq
 
     val board: TransitionGraph = tileAt.collect {
-      case (position, tile) if isAccessible(tile) =>
+      case (position, tile) if canAccessTile(tile) =>
         val state = stateAt(position._1, position._2)
         state -> {
-          if (isTerminal(tile)) {
+          if (isTerminalTile(tile)) {
             actionMoves.map {
               case (action, _) => action -> Seq((state, 1d, rewardFor(tile)))
             }
@@ -105,7 +108,7 @@ trait BoardEnvironment[State, Action] extends StaticFiniteEnvironment[State, Act
       yield
         (for ((tile, c) <- row.zipWithIndex)
           yield {
-            if ((isTerminal(tile) && !showTerminalTiles) || !isAccessible(tile))
+            if ((isTerminalTile(tile) && !showTerminalTiles) || !canAccessTile(tile))
               tile
             else
               values(stateAt(r, c))

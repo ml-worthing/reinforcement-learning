@@ -30,7 +30,8 @@ object RecyclingRobot {
         "The mobile robot having 2 states (low,high energy) and 3 possible actions (search, wait, recharge)."
 
       override val initialStates: Set[State] = Set(HighEnergy)
-      override val terminalStates: Set[State] = Set()
+
+      override def isTerminalState(state: State): Boolean = false
 
       override val transitionGraph: TransitionGraph = Map(
         LowEnergy -> Map(

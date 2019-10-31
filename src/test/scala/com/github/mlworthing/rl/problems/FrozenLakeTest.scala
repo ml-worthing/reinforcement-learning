@@ -16,9 +16,9 @@
 
 package com.github.mlworthing.rl.problems
 
-import com.github.mlworthing.rl.{Deterministic, Stochastic}
-import com.github.mlworthing.rl.agents.{AgentMDP, DynamicProgrammingEvaluateImproveAgent, DynamicProgrammingValueIterationDeterministicAgent, DynamicProgrammingValueIterationStochasticAgent}
+import com.github.mlworthing.rl.agents.{DynamicProgrammingEvaluateImproveAgent, DynamicProgrammingValueIterationDeterministicAgent, DynamicProgrammingValueIterationStochasticAgent}
 import com.github.mlworthing.rl.utils.PolicyExecutor
+import com.github.mlworthing.rl.{Deterministic, Stochastic}
 import com.github.mlworthing.rlai.utils.UnitSpec
 
 class FrozenLakeTest extends UnitSpec {

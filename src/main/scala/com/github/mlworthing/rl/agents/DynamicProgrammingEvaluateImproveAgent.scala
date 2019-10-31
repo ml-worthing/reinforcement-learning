@@ -100,7 +100,7 @@ final class DynamicProgrammingEvaluateImproveAgent[State, Action](
         // for each possible transition
         for ((nextState, probability, reward) <- possibleTransitions) {
           val value =
-            if (environment.terminalStates.contains(nextState)) reward
+            if (environment.isTerminalState(nextState)) reward
             else reward + gamma * stateValue(nextState)
           // and update the state value
           stateValue(state) = stateValue(state) + probability * value
@@ -133,7 +133,7 @@ final class DynamicProgrammingEvaluateImproveAgent[State, Action](
         // and for each possible transition
         for ((nextState, probability, reward) <- environment.transitions(state)(action)) {
           val value =
-            if (environment.terminalStates.contains(nextState)) reward
+            if (environment.isTerminalState(nextState)) reward
             else reward + gamma * stateValue(nextState)
           // update action value
           actionValues(action) = actionValues(action) + probability * value
